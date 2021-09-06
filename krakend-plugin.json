@@ -37,12 +37,17 @@
       "prefix": "[KRAKEND]",
       "syslog": false,
       "stdout": true
+    },
+    "github_com/devopsfaith/krakend/transport/http/server/handler": {
+      "name": [
+        "fidiboSagaHandler"
+      ]
     }
   },
   "endpoints": [
     {
-      "endpoint": "/payment",
-      "method": "GET",
+      "endpoint": "/confirm_payment",
+      "method": "POST",
       "backend": [
         {
           "host": [
@@ -50,7 +55,7 @@
           ],
           "extra_config": {
             "github.com/devopsfaith/krakend/transport/http/client/executor": {
-              "name": "sagaPlugin"
+              "name": "fidiboSagaClient"
             }
           }
         }
