@@ -9,11 +9,11 @@ import (
 )
 
 func init() {
-	fmt.Println("Plugin: sampleClientPlugin loaded...")
+	fmt.Println("Plugin: sagaPlugin loaded...")
 }
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
-var ClientRegisterer = registerer("sampleClientPlugin")
+var ClientRegisterer = registerer("sagaPlugin")
 
 type registerer string
 
@@ -39,7 +39,7 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// create a http client, do the request, parse/manipulate the client response and write it back to your responseWriter.
-		fmt.Println("Plugin: sampleClientPlugin message")
+		fmt.Println("Plugin: sagaPlugin message")
 		client := &http.Client{}
 		resp, _ := client.Do(req)
 		bodyBytes, _ := io.ReadAll(resp.Body)

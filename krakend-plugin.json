@@ -50,7 +50,7 @@
           ],
           "extra_config": {
             "github.com/devopsfaith/krakend/transport/http/client/executor": {
-              "name": "sampleClientPlugin"
+              "name": "sagaPlugin"
             }
           }
         }
