@@ -64,7 +64,8 @@
               "name": "fidiboSagaClient",
               "endpoint": "confirm_payment",
               "success_statuses": [
-                200
+                200,
+                201
               ],
               "failure_statuses": [
                 422,
