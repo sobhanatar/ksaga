@@ -6,11 +6,16 @@ import (
 	"os"
 )
 
+type ExtraConfiguration struct {
+	Message  string `json:"message"`
+	Statuses []int  `json:"statuses"`
+}
+
 type ExtraConfig struct {
-	Name            string
-	Endpoint        string
-	SuccessStatuses []int
-	FailureStatuses []int
+	Name     string
+	Endpoint string
+	Success  ExtraConfiguration
+	Failure  ExtraConfiguration
 }
 
 //ParseExtraConfig parse the config embedded in extra_config part of krakend config
@@ -28,12 +33,16 @@ func ParseExtraConfig(extra map[string]interface{}) (ec ExtraConfig, err error) 
 		return ec, errors.New("wrong endpoint setup")
 	}
 
-	for _, v := range extra["success_statuses"].([]interface{}) {
-		ec.SuccessStatuses = append(ec.SuccessStatuses, int(v.(float64)))
+	success := extra["success"].(map[string]interface{})
+	ec.Success.Message = success["message"].(string)
+	for _, v := range success["statuses"].([]interface{}) {
+		ec.Success.Statuses = append(ec.Success.Statuses, int(v.(float64)))
 	}
 
-	for _, v := range extra["failure_statuses"].([]interface{}) {
-		ec.FailureStatuses = append(ec.FailureStatuses, int(v.(float64)))
+	failure := extra["failure"].(map[string]interface{})
+	ec.Success.Message = failure["message"].(string)
+	for _, v := range failure["statuses"].([]interface{}) {
+		ec.Failure.Statuses = append(ec.Failure.Statuses, int(v.(float64)))
 	}
 
 	return
@@ -42,6 +51,7 @@ func ParseExtraConfig(extra map[string]interface{}) (ec ExtraConfig, err error) 
 type Configuration struct {
 	Url              string   `json:"url"`
 	Method           string   `json:"method"`
+	Message          string   `json:"message"`
 	RequireBody      bool     `json:"require_body"`
 	AdditionalParams []string `json:"additional_params"`
 	Statuses         []int    `json:"statuses"`

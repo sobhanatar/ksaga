@@ -8,6 +8,7 @@
           "additional_params": [],
           "require_body": false,
           "method": "POST",
+          "message" : "",
           "statuses": [
             200
           ]
@@ -17,6 +18,7 @@
           "additional_params": [],
           "require_body": true,
           "method": "POST",
+          "message" : "",
           "statuses": [
             422,
             500
@@ -29,6 +31,7 @@
           "method": "POST",
           "additional_params": [],
           "require_body": true,
+          "message" : "",
           "statuses": [
             200
           ]
@@ -38,6 +41,7 @@
           "url": "https://invoice.fidibo.com/api/compensate",
           "additional_params": [],
           "require_body": true,
+          "message" : "",
           "statuses": [
             422,
             500
@@ -50,6 +54,7 @@
           "method": "POST",
           "additional_params": [],
           "require_body": true,
+          "message" : "",
           "statuses": [
             200
           ]
@@ -59,6 +64,7 @@
           "method": "POST",
           "additional_params": [],
           "require_body": false,
+          "message" : "",
           "statuses": [
             422,
             500

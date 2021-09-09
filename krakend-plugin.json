@@ -63,13 +63,19 @@
             "github.com/devopsfaith/krakend/transport/http/client/executor": {
               "name": "fidiboSagaClient",
               "endpoint": "confirm_payment",
-              "success_statuses": [
-                200
-              ],
-              "failure_statuses": [
-                422,
-                500
-              ]
+              "success": {
+                "message": "",
+                "statuses": [
+                  200
+                ]
+              },
+              "failure": {
+                "message": "",
+                "statuses": [
+                  422,
+                  500
+                ]
+              }
             }
           }
         }

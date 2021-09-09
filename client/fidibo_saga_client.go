@@ -75,6 +75,7 @@ func ProcessSteps(req *http.Request, steps []config.Steps) (resp []byte) {
 	clogger.Println(fmt.Sprintf("Calling %s...", req.URL.String()))
 
 	response, err := ProcessInitialRequest(req, steps[0])
+	resp, _ = io.ReadAll(response.Body)
 	if err != nil {
 		clogger.Println(fmt.Sprintf("Call Error: %s", err.Error()))
 		return
