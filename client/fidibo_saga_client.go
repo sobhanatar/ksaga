@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -51,19 +52,18 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			return
 		}
 
-		//if !ok {
-		//	clogger.Println("No matching endpoint found")
-		//	return
-		//}
-
-		for _, endpoint := range cfg {
-			clogger.Println(req.URL.Path, req.URL.String())
-			if endpoint.Endpoint == ec.Endpoint {
-				fmt.Println(": ", req.URL.String())
-				response = ProcessSteps(req, endpoint.Steps)
-			}
+		eps := config.GetEndpoints(cfg)
+		ex, ix := helpers.InSlice(ec.Endpoint, eps)
+		if !ex {
+			//todo: alert somehow
+			clogger.Println("No matching endpoint found in SAGA client plugin")
+			resp, _ := json.Marshal(map[string]string{"message": "No matching endpoint found"})
+			w.Header().Add("Content-Type", "application/json")
+			_, _ = w.Write(resp)
+			return
 		}
 
+		response = ProcessSteps(req, cfg[ix].Steps)
 		_, _ = w.Write(response)
 
 	}), nil
@@ -71,17 +71,15 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 
 func ProcessSteps(req *http.Request, steps []config.Steps) (resp []byte) {
 	sc := len(steps)
-	clogger.Println(fmt.Sprintf("Number of Services to call: %d", sc))
-	clogger.Println(fmt.Sprintf("Calling %s...", req.URL.String()))
-
+	clogger.Println(fmt.Sprintf("Number of services to call: %d", sc))
 	response, err := ProcessInitialRequest(req, steps[0])
+	clogger.Println(fmt.Sprintf("Response status from %s: %d", steps[0].Alias, response.StatusCode))
 	resp, _ = io.ReadAll(response.Body)
 	if err != nil {
 		clogger.Println(fmt.Sprintf("Call Error: %s", err.Error()))
 		return
 	}
 
-	resp, _ = io.ReadAll(response.Body)
 	return
 	//for _, step := range steps {
 	//
@@ -90,7 +88,9 @@ func ProcessSteps(req *http.Request, steps []config.Steps) (resp []byte) {
 	return
 }
 
+//ProcessInitialRequest process the first request which is configured in krakend config file
 func ProcessInitialRequest(initReq *http.Request, step config.Steps) (resp *http.Response, err error) {
+	clogger.Println(fmt.Sprintf("Calling %s...", step.Alias))
 	client := &http.Client{}
 	resp, err = client.Do(initReq)
 	if err != nil {

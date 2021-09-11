@@ -14,8 +14,6 @@ type ExtraConfiguration struct {
 type ExtraConfig struct {
 	Name     string
 	Endpoint string
-	Success  ExtraConfiguration
-	Failure  ExtraConfiguration
 }
 
 //ParseExtraConfig parse the config embedded in extra_config part of krakend config
@@ -33,18 +31,6 @@ func ParseExtraConfig(extra map[string]interface{}) (ec ExtraConfig, err error) 
 		return ec, errors.New("wrong endpoint setup")
 	}
 
-	success := extra["success"].(map[string]interface{})
-	ec.Success.Message = success["message"].(string)
-	for _, v := range success["statuses"].([]interface{}) {
-		ec.Success.Statuses = append(ec.Success.Statuses, int(v.(float64)))
-	}
-
-	failure := extra["failure"].(map[string]interface{})
-	ec.Success.Message = failure["message"].(string)
-	for _, v := range failure["statuses"].([]interface{}) {
-		ec.Failure.Statuses = append(ec.Failure.Statuses, int(v.(float64)))
-	}
-
 	return
 }
 
@@ -58,6 +44,7 @@ type Configuration struct {
 }
 
 type Steps struct {
+	Alias   string
 	Success Configuration
 	Failure Configuration
 }
@@ -76,6 +63,15 @@ func ParseClientConfig(addr string) (cfg []ClientConfig, err error) {
 
 	if err = json.Unmarshal(cfgF, &cfg); err != nil {
 		return
+	}
+
+	return
+}
+
+//GetEndpoints gets all available endpoints in client config file
+func GetEndpoints(cfg []ClientConfig) (eps []string) {
+	for _, k := range cfg {
+		eps = append(eps, k.Endpoint)
 	}
 
 	return

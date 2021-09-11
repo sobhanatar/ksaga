@@ -3,22 +3,96 @@
     "endpoint": "confirm_payment",
     "steps": [
       {
+        "alias" : "payment",
         "success": {
-          "url": "first node is being handled via krakend config",
-          "additional_params": [],
-          "require_body": false,
+          "url": "http://127.0.0.1:6102/api/krakend/payment/register",
           "method": "POST",
-          "message" : "",
+          "additional_params": [],
+          "require_body": true,
           "statuses": [
             200
           ]
         },
         "failure": {
-          "url": "https://payment.fidibo.com/api/compensate",
+          "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
           "additional_params": [],
           "require_body": true,
           "method": "POST",
-          "message" : "",
+          "message": "The endpoint didn't provide response",
+          "statuses": [
+            422,
+            500
+          ]
+        }
+      },
+      {
+        "alias" : "invoice",
+        "success": {
+          "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
+          "method": "POST",
+          "additional_params": [],
+          "require_body": true,
+          "statuses": [
+            200
+          ]
+        },
+        "failure": {
+          "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
+          "method": "POST",
+          "additional_params": [],
+          "require_body": true,
+          "message": "",
+          "statuses": [
+            422,
+            500
+          ]
+        }
+      },
+      {
+        "alias" : "library",
+        "success": {
+          "url": "http://127.0.0.1:6102/api/krakend/library/register",
+          "method": "POST",
+          "additional_params": [],
+          "require_body": true,
+          "message": "",
+          "statuses": [
+            200
+          ]
+        },
+        "failure": {
+          "url": "last node require no failure url",
+          "method": "POST",
+          "additional_params": [],
+          "require_body": false,
+          "message": "",
+          "statuses": [
+            422,
+            500
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "redeem",
+    "steps": [
+      {
+        "success": {
+          "url": "http://127.0.0.1:6102/api/krakend/payment/register",
+          "method": "POST",
+          "additional_params": [],
+          "require_body": true,
+          "statuses": [
+            200
+          ]
+        },
+        "failure": {
+          "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
+          "additional_params": [],
+          "require_body": true,
+          "method": "POST",
+          "message": "The endpoint didn't provide response",
           "statuses": [
             422,
             500
@@ -27,21 +101,20 @@
       },
       {
         "success": {
-          "url": "https://invoice.fidibo.com/api/register",
+          "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
           "additional_params": [],
           "require_body": true,
-          "message" : "",
           "statuses": [
             200
           ]
         },
         "failure": {
+          "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
           "method": "POST",
-          "url": "https://invoice.fidibo.com/api/compensate",
           "additional_params": [],
           "require_body": true,
-          "message" : "",
+          "message": "",
           "statuses": [
             422,
             500
@@ -50,21 +123,21 @@
       },
       {
         "success": {
-          "url": "https://user.fidibo.com/api/library/register",
+          "url": "http://127.0.0.1:6102/api/krakend/library/register",
           "method": "POST",
           "additional_params": [],
           "require_body": true,
-          "message" : "",
+          "message": "",
           "statuses": [
             200
           ]
         },
         "failure": {
-          "url": "last node require no failure settings",
+          "url": "last node require no failure url",
           "method": "POST",
           "additional_params": [],
           "require_body": false,
-          "message" : "",
+          "message": "",
           "statuses": [
             422,
             500

@@ -56,26 +56,13 @@
           "method": "POST",
           "encoding": "json",
           "host": [
-            "http://127.0.0.1:6102"
+            "http://localhost:8989"
           ],
-          "url_pattern": "/api/service/verify/code/{gateway}",
+          "url_pattern": "/api/krakend/payment/register",
           "extra_config": {
             "github.com/devopsfaith/krakend/transport/http/client/executor": {
               "name": "fidiboSagaClient",
-              "endpoint": "confirm_payment",
-              "success": {
-                "message": "",
-                "statuses": [
-                  200
-                ]
-              },
-              "failure": {
-                "message": "",
-                "statuses": [
-                  422,
-                  500
-                ]
-              }
+              "endpoint": "confirm_payment"
             }
           }
         }
