@@ -45,15 +45,13 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var response []byte
 
-		// create a http client, do the request, parse/manipulate the client response and write it back to your responseWriter.
 		cfg, err := config.ParseClientConfig(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
 			clogger.Println(err.Error())
 			return
 		}
 
-		eps := config.GetEndpoints(cfg)
-		ex, ix := helpers.InSlice(ec.Endpoint, eps)
+		ex, ix := GetEndpointIndex(ec.Endpoint, cfg)
 		if !ex {
 			//todo: alert somehow
 			clogger.Println("No matching endpoint found in SAGA client plugin")
@@ -67,6 +65,11 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		_, _ = w.Write(response)
 
 	}), nil
+}
+
+func GetEndpointIndex(endpoint string, cfg []config.ClientConfig) (ex bool, ix int) {
+	eps := config.GetEndpoints(cfg)
+	return helpers.InSlice(endpoint, eps)
 }
 
 func ProcessSteps(req *http.Request, steps []config.Steps) (resp []byte) {

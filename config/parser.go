@@ -68,7 +68,7 @@ func ParseClientConfig(addr string) (cfg []ClientConfig, err error) {
 	return
 }
 
-//GetEndpoints gets all available endpoints in client config file
+//GetEndpoints get all available endpoints in client config file
 func GetEndpoints(cfg []ClientConfig) (eps []string) {
 	for _, k := range cfg {
 		eps = append(eps, k.Endpoint)
