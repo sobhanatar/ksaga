@@ -67,11 +67,13 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	}), nil
 }
 
+//GetEndpointIndex get the index of matching endpoint if exists
 func GetEndpointIndex(endpoint string, cfg []config.ClientConfig) (ex bool, ix int) {
 	eps := config.GetEndpoints(cfg)
 	return helpers.InSlice(endpoint, eps)
 }
 
+//ProcessSteps process the steps based on config file
 func ProcessSteps(req *http.Request, steps []config.Steps) (resp []byte) {
 	sc := len(steps)
 	clogger.Println(fmt.Sprintf("Number of services to call: %d", sc))
