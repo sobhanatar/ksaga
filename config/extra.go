@@ -10,12 +10,16 @@ type Configuration struct {
 }
 
 type Steps struct {
-	Alias   string
-	Success Configuration
-	Failure Configuration
+	Alias   string        `json:"alias"`
+	Success Configuration `json:"success"`
+	Failure Configuration `json:"failure"`
 }
 
 type ClientConfig struct {
-	Endpoint string `json:"endpoint"`
-	Steps    []Steps
+	Endpoint string  `json:"endpoint"`
+	Steps    []Steps `json:"steps"`
+}
+
+func (cc *ClientConfig) ClientConfig() *ClientConfig {
+	return cc
 }

@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/helpers"
 	"os"
 )
 
-//Extra parse extra_config key value of plugin in krakend config file
-func Extra(extra map[string]interface{}) (ec ExtraConfig, err error) {
+//ParseExtra parse extra_config key value of plugin in krakend config file
+func ParseExtra(extra map[string]interface{}) (ec ExtraConfig, err error) {
 	ec.SetName(extra["name"].(string))
 	ec.SetEndpoint(extra["endpoint"].(string))
 
@@ -23,22 +24,28 @@ func Extra(extra map[string]interface{}) (ec ExtraConfig, err error) {
 	return
 }
 
-//Client parse the client.json file
-func Client(addr string) (cfg []ClientConfig, err error) {
-	cfgF, err := os.ReadFile(addr)
+//ParseClient parse the client.json file
+func ParseClient(addr string) (cfg []ClientConfig, err error) {
+	f, err := os.ReadFile(addr)
 	if err != nil {
 		return cfg, errors.New(fmt.Sprintf("Error reading client.json file: %s", err.Error()))
 	}
 
-	if err = json.Unmarshal(cfgF, &cfg); err != nil {
+	if err = json.Unmarshal(f, &cfg); err != nil {
 		return cfg, errors.New(fmt.Sprintf("Error unmarshaling client.json file: %s", err.Error()))
 	}
 
 	return
 }
 
-//Endpoints get all available endpoints in client config file
-func Endpoints(cfg []ClientConfig) (eps []string) {
+//EndpointIndex get the index of matching endpoint if exists
+func EndpointIndex(endpoint string, cfg []ClientConfig) (ex bool, ix int) {
+	eps := parsEndpoints(cfg)
+	return helpers.InSlice(endpoint, eps)
+}
+
+//parsEndpoints get all available endpoints in client config file
+func parsEndpoints(cfg []ClientConfig) (eps []string) {
 	for _, k := range cfg {
 		eps = append(eps, k.Endpoint)
 	}
