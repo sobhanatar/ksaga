@@ -78,28 +78,7 @@
     "endpoint": "redeem",
     "steps": [
       {
-        "success": {
-          "url": "http://127.0.0.1:6102/api/krakend/payment/register",
-          "method": "POST",
-          "additional_params": [],
-          "require_body": true,
-          "statuses": [
-            200
-          ]
-        },
-        "failure": {
-          "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
-          "additional_params": [],
-          "require_body": true,
-          "method": "POST",
-          "message": "The endpoint didn't provide response",
-          "statuses": [
-            422,
-            500
-          ]
-        }
-      },
-      {
+        "alias" : "invoice",
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
@@ -122,8 +101,9 @@
         }
       },
       {
+        "alias" : "wallet",
         "success": {
-          "url": "http://127.0.0.1:6102/api/krakend/library/register",
+          "url": "http://127.0.0.1:6102/api/krakend/wallet/register",
           "method": "POST",
           "additional_params": [],
           "require_body": true,

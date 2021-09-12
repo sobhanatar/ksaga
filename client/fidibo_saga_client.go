@@ -33,11 +33,11 @@ func (r registerer) RegisterClients(f func(
 }
 
 func (r registerer) registerClients(ctx context.Context, extra map[string]interface{}) (http.Handler, error) {
-	ec, err := config.ParseExtraConfig(extra)
+	ec, err := config.Extra(extra)
 	if err != nil {
 		return nil, err
 	}
-	if ec.Name != string(r) {
+	if ec.Name() != string(r) {
 		return nil, fmt.Errorf("plugin: unknown register %s", ec.Name)
 	}
 
@@ -45,13 +45,13 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var response []byte
 
-		cfg, err := config.ParseClientConfig(fmt.Sprintf("./plugins/%s", "client.json"))
+		cfg, err := config.Client(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
 			clogger.Println(err.Error())
 			return
 		}
 
-		ex, ix := GetEndpointIndex(ec.Endpoint, cfg)
+		ex, ix := EndpointIndex(ec.Endpoint(), cfg)
 		if !ex {
 			//todo: alert somehow
 			clogger.Println("No matching endpoint found in SAGA client plugin")
@@ -67,9 +67,9 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	}), nil
 }
 
-//GetEndpointIndex get the index of matching endpoint if exists
-func GetEndpointIndex(endpoint string, cfg []config.ClientConfig) (ex bool, ix int) {
-	eps := config.GetEndpoints(cfg)
+//EndpointIndex get the index of matching endpoint if exists
+func EndpointIndex(endpoint string, cfg []config.ClientConfig) (ex bool, ix int) {
+	eps := config.Endpoints(cfg)
 	return helpers.InSlice(endpoint, eps)
 }
 
