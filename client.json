@@ -8,8 +8,9 @@
           "url": "http://127.0.0.1:6102/api/krakend/payment/register",
           "method": "POST",
           "timeout": 10000,
-          "retry": 1,
-          "header" : {"Foo" :  "ZOO; BAR"},
+          "header": {
+            "Foo": "ZOO; BAR"
+          },
           "statuses": [
             200
           ]
@@ -18,8 +19,9 @@
           "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
           "method": "POST",
           "timeout": 300,
-          "retry": 1,
-          "header" : {"Foo" :  "ZOO; BAR"},
+          "header": {
+            "Foo": "ZOO; BAR"
+          },
           "body": true,
           "message": "The endpoint didn't provide response",
           "statuses": [
@@ -34,8 +36,9 @@
           "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
           "timeout": 10000,
-          "retry": 1,
-          "header" : {"Foo" :  "ZOO; BAR"},
+          "header": {
+            "Foo": "ZOO; BAR"
+          },
           "body": true,
           "statuses": [
             200
@@ -45,8 +48,9 @@
           "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
           "method": "POST",
           "timeout": 300,
-          "retry": 1,
-          "header" : {"Foo" :  "ZOO; BAR"},
+          "header": {
+            "Foo": "ZOO; BAR"
+          },
           "body": true,
           "message": "",
           "statuses": [
@@ -61,8 +65,9 @@
           "url": "http://127.0.0.1:6102/api/krakend/library/register",
           "method": "POST",
           "timeout": 10000,
-          "retry": 1,
-          "header" : {"Foo" :  "ZOO; BAR"},
+          "header": {
+            "Foo": "ZOO; BAR"
+          },
           "body": true,
           "message": "",
           "statuses": [
@@ -73,8 +78,9 @@
           "url": "last node require no failure url",
           "method": "POST",
           "timeout": 300,
-          "retry": 1,
-          "header" : {"Foo" :  "ZOO; BAR"},
+          "header": {
+            "Foo": "ZOO; BAR"
+          },
           "body": false,
           "message": "",
           "statuses": [

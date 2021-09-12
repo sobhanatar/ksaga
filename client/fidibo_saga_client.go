@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -21,11 +20,11 @@ var ClientRegisterer = registerer("fidiboSagaClient")
 
 type registerer string
 
-var clogger *log.Logger
+var cLog *log.Logger
 
 func init() {
-	clogger = log.New(os.Stderr, "[KRAKEND][CLIENT] ", log.Ldate|log.Ltime)
-	clogger.Println("fidiboSagaClient plugin loaded")
+	cLog = log.New(os.Stderr, "[KRAKEND][CLIENT] ", log.Ldate|log.Ltime)
+	cLog.Println("fidiboSagaClient plugin loaded")
 }
 
 func (r registerer) RegisterClients(f func(
@@ -50,13 +49,14 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var (
-			response []byte
-			cfg      config.ClientConfigs
+			resp []byte
+			cfg  config.ClientConfigs
+			fi   int
 		)
 
 		err = cfg.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
-			clogger.Println(err.Error())
+			cLog.Println(err.Error())
 			return
 		}
 
@@ -65,35 +65,37 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			/*
 			 * todo: alerting / registering event in sentry, kafka, ...
 			 */
-			clogger.Println("No matching endpoint found in SAGA client plugin")
-			resp, _ := json.Marshal(map[string]string{"message": "No matching endpoint found"})
-			w.Header().Add("Content-Type", "application/json")
-			_, _ = w.Write(resp)
+			cLog.Println("No matching endpoint found in SAGA client plugin")
+			//resp, _ := json.Marshal(map[string]string{"message": "No matching endpoint found"})
+			//w.Header().Add("Content-Type", "application/json")
+			//_, _ = w.Write(resp)
 			return
 		}
 
-		response = ProcessSteps(req, cfg[ix].Steps)
-		_, _ = w.Write(response)
+		resp, fi, err = ProcessRequests(req, cfg[ix].Steps)
+		if err != nil {
+			resp, err = ProcessRollbackRequests(req, cfg[ix].Steps, fi)
+		}
+		_, _ = w.Write(resp)
 
 	}), nil
 }
 
-//ProcessSteps process the steps based on config file
-func ProcessSteps(req *http.Request, steps []config.Steps) []byte {
+//ProcessRequests process the steps based on config file
+func ProcessRequests(req *http.Request, steps []config.Steps) ([]byte, int, error) {
 	var (
 		resp []byte
 		err  error
 	)
 
 	sc := len(steps)
-	clogger.Println(fmt.Sprintf("Number of services to call: %d", sc))
+	cLog.Println(fmt.Sprintf("Number of services to call: %d", sc))
 
 	for ix, step := range steps {
 		resp, err = ProcessRequest(req, step)
 		if err != nil {
-			clogger.Println(err.Error())
-			ProcessRollbackRequest(step, ix)
-			return resp
+			cLog.Println(err.Error())
+			return resp, ix, err
 		}
 
 		if ix < sc-1 {
@@ -101,16 +103,22 @@ func ProcessSteps(req *http.Request, steps []config.Steps) []byte {
 		}
 	}
 
-	return resp
+	return resp, 0, err
 }
 
-func ProcessRollbackRequest(step config.Steps, ix int) {
-	fmt.Println("We've rolled backed")
+func ProcessRollbackRequests(req *http.Request, steps []config.Steps, ix int) (response []byte, err error) {
+	for step := ix - 1; step >= 0; step-- {
+		cLog.Println(fmt.Sprintf(exceptions.ClientRollbackError, steps[step].Alias))
+		BuildRequest("failure", steps[step], req, nil)
+		// todo: tomorrow
+	}
+
+	return
 }
 
 //ProcessRequest process the first request which is configured in krakend config file
 func ProcessRequest(req *http.Request, step config.Steps) (body []byte, err error) {
-	clogger.Println(fmt.Sprintf("Calling \"%s\" endpoint...", step.Alias))
+	cLog.Println(fmt.Sprintf("Calling \"%s\" endpoint...", step.Alias))
 	client := &http.Client{
 		Timeout: time.Duration(step.Success.Timeout) * time.Millisecond,
 	}
