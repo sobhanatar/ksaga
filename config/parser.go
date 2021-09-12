@@ -31,7 +31,7 @@ func (cfg *ClientConfigs) ParseClient(addr string) (err error) {
 		return errors.New(fmt.Sprintf("Error reading client.json file: %s", err.Error()))
 	}
 
-	if err = json.Unmarshal(f, &cfg); err != nil {
+	if err = json.Unmarshal(f, cfg); err != nil {
 		return errors.New(fmt.Sprintf("Error unmarshaling client.json file: %s", err.Error()))
 	}
 
@@ -39,14 +39,14 @@ func (cfg *ClientConfigs) ParseClient(addr string) (err error) {
 }
 
 //EndpointIndex get the index of matching endpoint if exists
-func EndpointIndex(endpoint string, cfg []ClientConfig) (ex bool, ix int) {
-	eps := parsEndpoints(cfg)
+func (cfg *ClientConfigs) EndpointIndex(endpoint string) (ex bool, ix int) {
+	eps := cfg.parsEndpoints()
 	return helpers.InSlice(endpoint, eps)
 }
 
 //parsEndpoints get all available endpoints in client config file
-func parsEndpoints(cfg []ClientConfig) (eps []string) {
-	for _, k := range cfg {
+func (cfg *ClientConfigs) parsEndpoints() (eps []string) {
+	for _, k := range *cfg {
 		eps = append(eps, k.Endpoint)
 	}
 

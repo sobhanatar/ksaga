@@ -57,7 +57,7 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			return
 		}
 
-		ex, ix := config.EndpointIndex(ec.Endpoint(), cfg)
+		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
 			//todo: alert somehow
 			clogger.Println("No matching endpoint found in SAGA client plugin")
