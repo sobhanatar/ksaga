@@ -1,12 +1,13 @@
 package config
 
 type Configuration struct {
-	Url              string   `json:"url"`
-	Method           string   `json:"method"`
-	Message          string   `json:"message"`
-	RequireBody      bool     `json:"require_body"`
-	AdditionalParams []string `json:"additional_params"`
-	Statuses         []int    `json:"statuses"`
+	Url      string            `json:"url"`
+	Method   string            `json:"method"`
+	Timeout  int               `json:"timeout"`
+	Header   map[string]string `json:"headers"`
+	Message  string            `json:"message"`
+	Body     bool              `json:"body"`
+	Statuses []int             `json:"statuses"`
 }
 
 type Steps struct {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,8 +10,10 @@ import (
 	"log"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/exceptions"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/helpers"
 	"os"
+	"time"
 )
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
@@ -59,7 +62,9 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 
 		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
-			//todo: alert somehow
+			/*
+			 * todo: alerting / registering event in sentry, kafka, ...
+			 */
 			clogger.Println("No matching endpoint found in SAGA client plugin")
 			resp, _ := json.Marshal(map[string]string{"message": "No matching endpoint found"})
 			w.Header().Add("Content-Type", "application/json")
@@ -74,39 +79,82 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 }
 
 //ProcessSteps process the steps based on config file
-func ProcessSteps(req *http.Request, steps []config.Steps) (resp []byte) {
+func ProcessSteps(req *http.Request, steps []config.Steps) []byte {
+	var (
+		resp []byte
+		err  error
+	)
+
 	sc := len(steps)
 	clogger.Println(fmt.Sprintf("Number of services to call: %d", sc))
-	response, err := ProcessInitialRequest(req, steps[0])
-	clogger.Println(fmt.Sprintf("Response status from %s: %d", steps[0].Alias, response.StatusCode))
-	resp, _ = io.ReadAll(response.Body)
-	if err != nil {
-		clogger.Println(fmt.Sprintf("Call Error: %s", err.Error()))
-		return
+
+	for ix, step := range steps {
+		resp, err = ProcessRequest(req, step)
+		if err != nil {
+			clogger.Println(err.Error())
+			ProcessRollbackRequest(step, ix)
+			return resp
+		}
+
+		if ix < sc-1 {
+			req = BuildRequest("success", steps[ix+1], req, resp)
+		}
 	}
 
-	return
-	//for _, step := range steps {
-	//
-	//}
-
-	return
+	return resp
 }
 
-//ProcessInitialRequest process the first request which is configured in krakend config file
-func ProcessInitialRequest(initReq *http.Request, step config.Steps) (resp *http.Response, err error) {
-	clogger.Println(fmt.Sprintf("Calling %s...", step.Alias))
-	client := &http.Client{}
-	resp, err = client.Do(initReq)
+func ProcessRollbackRequest(step config.Steps, ix int) {
+	fmt.Println("We've rolled backed")
+}
+
+//ProcessRequest process the first request which is configured in krakend config file
+func ProcessRequest(req *http.Request, step config.Steps) (body []byte, err error) {
+	clogger.Println(fmt.Sprintf("Calling \"%s\" endpoint...", step.Alias))
+	client := &http.Client{
+		Timeout: time.Duration(step.Success.Timeout) * time.Millisecond,
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
-		clogger.Println("Call has failed. No compensation has called for initiating call")
-		return
+		return nil, errors.New(fmt.Sprintf(exceptions.ClientBackendCallError, step.Alias, err.Error()))
 	}
 
 	ex, _ := helpers.InSlice(resp.StatusCode, step.Failure.Statuses)
 	if ex {
-		return resp, errors.New(fmt.Sprintf("Call Failed with status %d. No compensation has called for initiating call", resp.StatusCode))
+		return nil, errors.New(fmt.Sprintf(exceptions.ClientStatusCodeError, step.Alias, resp.StatusCode, err.Error()))
+	}
+
+	body, err = io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf(exceptions.ClientReadBodyError, err.Error()))
 	}
 
 	return
+}
+
+//BuildRequest builds the request based on the step's config
+func BuildRequest(state string, step config.Steps, req *http.Request, resp []byte) *http.Request {
+	var body *bytes.Buffer
+
+	conf := step.Success
+	if state == "failure" {
+		conf = step.Failure
+	}
+
+	// If the next service declared need for the body pass it in
+	if conf.Body {
+		body = bytes.NewBuffer(resp)
+	}
+
+	request, _ := http.NewRequest(conf.Method, conf.Url, body)
+	request.Header = req.Header
+
+	for key, value := range conf.Header {
+		request.Header.Add(key, value)
+	}
+
+	fmt.Println(request.Header)
+	return request
 }

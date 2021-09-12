@@ -3,21 +3,24 @@
     "endpoint": "confirm_payment",
     "steps": [
       {
-        "alias" : "payment",
+        "alias": "payment",
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/register",
           "method": "POST",
-          "additional_params": [],
-          "require_body": true,
+          "timeout": 10000,
+          "retry": 1,
+          "header" : {"Foo" :  "ZOO; BAR"},
           "statuses": [
             200
           ]
         },
         "failure": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
-          "additional_params": [],
-          "require_body": true,
           "method": "POST",
+          "timeout": 300,
+          "retry": 1,
+          "header" : {"Foo" :  "ZOO; BAR"},
+          "body": true,
           "message": "The endpoint didn't provide response",
           "statuses": [
             422,
@@ -26,12 +29,14 @@
         }
       },
       {
-        "alias" : "invoice",
+        "alias": "invoice",
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
-          "additional_params": [],
-          "require_body": true,
+          "timeout": 10000,
+          "retry": 1,
+          "header" : {"Foo" :  "ZOO; BAR"},
+          "body": true,
           "statuses": [
             200
           ]
@@ -39,8 +44,10 @@
         "failure": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
           "method": "POST",
-          "additional_params": [],
-          "require_body": true,
+          "timeout": 300,
+          "retry": 1,
+          "header" : {"Foo" :  "ZOO; BAR"},
+          "body": true,
           "message": "",
           "statuses": [
             422,
@@ -49,12 +56,14 @@
         }
       },
       {
-        "alias" : "library",
+        "alias": "library",
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/library/register",
           "method": "POST",
-          "additional_params": [],
-          "require_body": true,
+          "timeout": 10000,
+          "retry": 1,
+          "header" : {"Foo" :  "ZOO; BAR"},
+          "body": true,
           "message": "",
           "statuses": [
             200
@@ -63,60 +72,10 @@
         "failure": {
           "url": "last node require no failure url",
           "method": "POST",
-          "additional_params": [],
-          "require_body": false,
-          "message": "",
-          "statuses": [
-            422,
-            500
-          ]
-        }
-      }
-    ]
-  },
-  {
-    "endpoint": "redeem",
-    "steps": [
-      {
-        "alias" : "invoice",
-        "success": {
-          "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
-          "method": "POST",
-          "additional_params": [],
-          "require_body": true,
-          "statuses": [
-            200
-          ]
-        },
-        "failure": {
-          "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
-          "method": "POST",
-          "additional_params": [],
-          "require_body": true,
-          "message": "",
-          "statuses": [
-            422,
-            500
-          ]
-        }
-      },
-      {
-        "alias" : "wallet",
-        "success": {
-          "url": "http://127.0.0.1:6102/api/krakend/wallet/register",
-          "method": "POST",
-          "additional_params": [],
-          "require_body": true,
-          "message": "",
-          "statuses": [
-            200
-          ]
-        },
-        "failure": {
-          "url": "last node require no failure url",
-          "method": "POST",
-          "additional_params": [],
-          "require_body": false,
+          "timeout": 300,
+          "retry": 1,
+          "header" : {"Foo" :  "ZOO; BAR"},
+          "body": false,
           "message": "",
           "statuses": [
             422,
