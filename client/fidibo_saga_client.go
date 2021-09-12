@@ -33,10 +33,13 @@ func (r registerer) RegisterClients(f func(
 }
 
 func (r registerer) registerClients(ctx context.Context, extra map[string]interface{}) (http.Handler, error) {
-	ec, err := config.ParseExtra(extra)
+	var ec config.ExtraConfig
+
+	err := ec.ParseExtra(extra)
 	if err != nil {
 		return nil, err
 	}
+
 	if ec.Name() != string(r) {
 		return nil, fmt.Errorf("plugin: unknown register %s", ec.Name())
 	}
@@ -45,10 +48,10 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var (
 			response []byte
-			cfg      []config.ClientConfig
+			cfg      config.ClientConfigs
 		)
 
-		cfg, err = config.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
+		err = cfg.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
 			clogger.Println(err.Error())
 			return

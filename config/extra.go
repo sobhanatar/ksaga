@@ -20,6 +20,4 @@ type ClientConfig struct {
 	Steps    []Steps `json:"steps"`
 }
 
-func (cc *ClientConfig) ClientConfig() *ClientConfig {
-	return cc
-}
+type ClientConfigs []ClientConfig
