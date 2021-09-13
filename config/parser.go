@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/helpers"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
 	"os"
 )
 
@@ -28,11 +29,11 @@ func (ec *ExtraConfig) ParseExtra(extra map[string]interface{}) (err error) {
 func (cfg *ClientConfigs) ParseClient(addr string) (err error) {
 	f, err := os.ReadFile(addr)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error reading client.json file: %s", err.Error()))
+		return errors.New(fmt.Sprintf(messages.ClientConfigFileError, err.Error()))
 	}
 
 	if err = json.Unmarshal(f, cfg); err != nil {
-		return errors.New(fmt.Sprintf("Error unmarshaling client.json file: %s", err.Error()))
+		return errors.New(fmt.Sprintf(messages.ClientConfigFIleUnmarshalError, err.Error()))
 	}
 
 	return

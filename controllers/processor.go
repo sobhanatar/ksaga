@@ -2,17 +2,21 @@ package controllers
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
-	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/exceptions"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/helpers"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
 	"time"
 )
 
-//ProcessRequests process the steps based on config file
+const (
+	Success = "success"
+	Failure = "failure"
+)
+
+//ProcessRequests call backend services based on th defined services on go
 func ProcessRequests(req *http.Request, steps []config.Steps) ([]byte, int, error) {
 	var (
 		resp []byte
@@ -23,6 +27,7 @@ func ProcessRequests(req *http.Request, steps []config.Steps) ([]byte, int, erro
 	fmt.Println(fmt.Sprintf("Number of services to call: %d", sc))
 
 	for ix, step := range steps {
+		fmt.Println(fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
 		resp, err = processRequest(req, step)
 		if err != nil {
 			fmt.Println(err.Error())
@@ -30,60 +35,83 @@ func ProcessRequests(req *http.Request, steps []config.Steps) ([]byte, int, erro
 		}
 
 		if ix < sc-1 {
-			req = buildRequest("success", steps[ix+1], req, resp)
+			req = buildRequest(Success, steps[ix+1], req, resp)
 		}
 	}
 
 	return resp, 0, err
 }
 
+//ProcessRollbackRequests call backend rollback requests based on th defined services on go
 func ProcessRollbackRequests(req *http.Request, steps []config.Steps, ix int) (response []byte, err error) {
+	if ix == 0 { //if the first transaction failed, the failure callback must be called
+		req = buildRequest(Failure, steps[0], req, response)
+		fmt.Println(fmt.Sprintf(messages.ClientRollbackError, steps[0].Alias, req.URL.String()))
+
+		_, err = processRequest(req, steps[0])
+		if err != nil {
+			/*
+			 * Todo: alert, write in kafka, etc
+			 */
+			fmt.Println(err.Error())
+			return
+		}
+
+		return
+	}
+
 	for step := ix - 1; step >= 0; step-- {
-		fmt.Println(fmt.Sprintf(exceptions.ClientRollbackError, steps[step].Alias))
-		buildRequest("failure", steps[step], req, nil)
-		// todo: tomorrow
+		req = buildRequest(Failure, steps[step], req, nil)
+		fmt.Println(fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
+
+		_, err = processRequest(req, steps[step])
+		if err != nil {
+			/*
+			 * Todo: alert, write in kafka, etc
+			 */
+			fmt.Println(err.Error())
+			return
+		}
 	}
 
 	return
 }
 
-//processRequest process the first request which is configured in krakend config file
 func processRequest(req *http.Request, step config.Steps) (body []byte, err error) {
-	fmt.Println(fmt.Sprintf("Calling \"%s\" endpoint...", step.Alias))
 	client := &http.Client{
 		Timeout: time.Duration(step.Success.Timeout) * time.Millisecond,
 	}
 
 	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf(exceptions.ClientBackendCallError, step.Alias, err.Error()))
+		return body, messages.BackendCallError(step.Alias, err.Error())
 	}
 
-	ex, _ := helpers.InSlice(resp.StatusCode, step.Failure.Statuses)
-	if ex {
-		return nil, errors.New(fmt.Sprintf(exceptions.ClientStatusCodeError, step.Alias, resp.StatusCode, err.Error()))
+	ex, _ := helpers.InSlice(resp.StatusCode, step.Statuses)
+	if !ex {
+		return body, messages.StatusError(step.Alias, resp.StatusCode)
 	}
 
 	body, err = io.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf(exceptions.ClientReadBodyError, err.Error()))
+		return body, messages.CloseBodyError(step.Alias, err.Error())
 	}
 
 	return
 }
 
-//buildRequest builds the request based on the step's config
 func buildRequest(state string, step config.Steps, req *http.Request, resp []byte) *http.Request {
-	var body *bytes.Buffer
+	var body = new(bytes.Buffer)
 
 	conf := step.Success
-	if state == "failure" {
+	if state == Failure {
 		conf = step.Failure
 	}
 
-	// If the next service declared need for the body pass it in
-	if conf.Body {
+	// If the next service declared need for the body and body is not nil then pass it in
+	if conf.Body && len(resp) != 0 {
 		body = bytes.NewBuffer(resp)
 	}
 
@@ -91,9 +119,8 @@ func buildRequest(state string, step config.Steps, req *http.Request, resp []byt
 	request.Header = req.Header
 
 	for key, value := range conf.Header {
-		request.Header.Add(key, value)
+		request.Header.Set(key, value)
 	}
 
-	fmt.Println(request.Header)
 	return request
 }

@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/controllers"
-	"os"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
 )
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
@@ -15,11 +14,8 @@ var ClientRegisterer = registerer("fidiboSagaClient")
 
 type registerer string
 
-var cLog *log.Logger
-
 func init() {
-	cLog = log.New(os.Stderr, "[KRAKEND][CLIENT] ", log.Ldate|log.Ltime)
-	cLog.Println("fidiboSagaClient plugin loaded")
+	fmt.Println(messages.ClientPluginLoad)
 }
 
 func (r registerer) RegisterClients(f func(
@@ -30,7 +26,9 @@ func (r registerer) RegisterClients(f func(
 }
 
 func (r registerer) registerClients(ctx context.Context, extra map[string]interface{}) (http.Handler, error) {
-	var ec config.ExtraConfig
+	var (
+		ec config.ExtraConfig
+	)
 
 	err := ec.ParseExtra(extra)
 	if err != nil {
@@ -43,11 +41,14 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		var cfg config.ClientConfigs
-
+		var (
+			cfg  config.ClientConfigs
+			resp []byte
+			fi   int
+		)
 		err = cfg.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
-			cLog.Println(err.Error())
+			fmt.Println(err.Error())
 			return
 		}
 
@@ -56,14 +57,25 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			/*
 			 * todo: alerting / registering event in sentry, kafka, ...
 			 */
-			cLog.Println("No matching endpoint found in SAGA client plugin")
+			fmt.Println(fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint()))
 			return
 		}
 
-		resp, fi, err := controllers.ProcessRequests(req, cfg[ix].Steps)
+		resp, fi, err = controllers.ProcessRequests(req, cfg[ix].Steps)
 		if err != nil {
 			resp, err = controllers.ProcessRollbackRequests(req, cfg[ix].Steps, fi)
+			if err != nil {
+				resp = messages.GenerateRollbackFailMessage(&w)
+				_, _ = w.Write(resp)
+				return
+			}
+
+			resp = messages.GenerateRollbackSuccessMessage(&w)
+			_, _ = w.Write(resp)
+			return
 		}
+
+		resp = messages.GenerateSuccessMessage(&w)
 		_, _ = w.Write(resp)
 
 	}), nil

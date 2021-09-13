@@ -4,89 +4,77 @@
     "steps": [
       {
         "alias": "payment",
+        "statuses": [
+          200
+        ],
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/register",
           "method": "POST",
           "timeout": 10000,
           "header": {
-            "Foo": "ZOO; BAR"
-          },
-          "statuses": [
-            200
-          ]
+            "Foo": "Bar"
+          }
         },
         "failure": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
           "method": "POST",
           "timeout": 300,
           "header": {
-            "Foo": "ZOO; BAR"
+            "Foo": "Bar"
           },
           "body": true,
-          "message": "The endpoint didn't provide response",
-          "statuses": [
-            422,
-            500
-          ]
+          "message": "The endpoint didn't provide response"
         }
       },
       {
         "alias": "invoice",
+        "statuses": [
+          200
+        ],
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
           "timeout": 10000,
           "header": {
-            "Foo": "ZOO; BAR"
+            "Foo": "Bar"
           },
-          "body": true,
-          "statuses": [
-            200
-          ]
+          "body": true
         },
         "failure": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
           "method": "POST",
           "timeout": 300,
           "header": {
-            "Foo": "ZOO; BAR"
+            "Foo": "Bar"
           },
           "body": true,
-          "message": "",
-          "statuses": [
-            422,
-            500
-          ]
+          "message": ""
         }
       },
       {
         "alias": "library",
+        "statuses": [
+          200
+        ],
         "success": {
           "url": "http://127.0.0.1:6102/api/krakend/library/register",
           "method": "POST",
           "timeout": 10000,
           "header": {
-            "Foo": "ZOO; BAR"
+            "Foo": "Bar"
           },
           "body": true,
-          "message": "",
-          "statuses": [
-            200
-          ]
+          "message": ""
         },
         "failure": {
           "url": "last node require no failure url",
           "method": "POST",
           "timeout": 300,
           "header": {
-            "Foo": "ZOO; BAR"
+            "Foo": "Bar"
           },
           "body": false,
-          "message": "",
-          "statuses": [
-            422,
-            500
-          ]
+          "message": ""
         }
       }
     ]
