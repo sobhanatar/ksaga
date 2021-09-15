@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/controllers"
@@ -45,7 +46,10 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			cfg  config.ClientConfigs
 			resp []byte
 			fi   int
+			uTID string
 		)
+
+		//the address should go into toml
 		err = cfg.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
 			fmt.Println(err.Error())
@@ -61,20 +65,25 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			return
 		}
 
-		resp, fi, err = controllers.ProcessRequests(req, cfg[ix].Steps)
+		uTID = uuid.New().String()
+		fmt.Println(fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
+
+		resp, fi, err = controllers.ProcessRequests(uTID, req, cfg[ix].Steps)
 		if err != nil {
-			resp, err = controllers.ProcessRollbackRequests(req, cfg[ix].Steps, fi)
+			resp, err = controllers.ProcessRollbackRequests(uTID, req, cfg[ix].Steps, fi)
 			if err != nil {
+				fmt.Println(messages.CallServiceRollbackError)
 				resp = messages.GenerateRollbackFailMessage(&w)
 				_, _ = w.Write(resp)
 				return
 			}
-
+			fmt.Println(messages.CallServiceRollback)
 			resp = messages.GenerateRollbackSuccessMessage(&w)
 			_, _ = w.Write(resp)
 			return
 		}
 
+		fmt.Println(messages.CallService)
 		resp = messages.GenerateSuccessMessage(&w)
 		_, _ = w.Write(resp)
 

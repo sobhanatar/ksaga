@@ -13,7 +13,8 @@
           "timeout": 10000,
           "header": {
             "Foo": "Bar"
-          }
+          },
+          "body": true
         },
         "failure": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",

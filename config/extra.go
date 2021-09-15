@@ -4,7 +4,7 @@ type Configuration struct {
 	Url     string            `json:"url"`
 	Method  string            `json:"method"`
 	Timeout int               `json:"timeout"`
-	Header  map[string]string `json:"headers"`
+	Header  map[string]string `json:"header"`
 	Message string            `json:"message"`
 	Body    bool              `json:"body"`
 }

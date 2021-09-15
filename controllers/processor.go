@@ -17,18 +17,20 @@ const (
 )
 
 //ProcessRequests call backend services based on th defined services on go
-func ProcessRequests(req *http.Request, steps []config.Steps) ([]byte, int, error) {
+func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) ([]byte, int, error) {
 	var (
 		resp []byte
 		err  error
 	)
 
 	sc := len(steps)
-	fmt.Println(fmt.Sprintf("Number of services to call: %d", sc))
+	fmt.Println(fmt.Sprintf(messages.CallNumberOfBackendService, sc))
 
 	for ix, step := range steps {
 		fmt.Println(fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
-		resp, err = processRequest(req, step)
+		req = buildRequest(Success, steps[ix], req, resp)
+
+		resp, err = processRequest(uTID, req, step)
 		if err != nil {
 			fmt.Println(err.Error())
 			return resp, ix, err
@@ -43,12 +45,12 @@ func ProcessRequests(req *http.Request, steps []config.Steps) ([]byte, int, erro
 }
 
 //ProcessRollbackRequests call backend rollback requests based on th defined services on go
-func ProcessRollbackRequests(req *http.Request, steps []config.Steps, ix int) (response []byte, err error) {
+func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, ix int) (response []byte, err error) {
 	if ix == 0 { //if the first transaction failed, the failure callback must be called
 		req = buildRequest(Failure, steps[0], req, response)
 		fmt.Println(fmt.Sprintf(messages.ClientRollbackError, steps[0].Alias, req.URL.String()))
 
-		_, err = processRequest(req, steps[0])
+		_, err = processRequest(uTID, req, steps[0])
 		if err != nil {
 			/*
 			 * Todo: alert, write in kafka, etc
@@ -64,7 +66,7 @@ func ProcessRollbackRequests(req *http.Request, steps []config.Steps, ix int) (r
 		req = buildRequest(Failure, steps[step], req, nil)
 		fmt.Println(fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
 
-		_, err = processRequest(req, steps[step])
+		_, err = processRequest(uTID, req, steps[step])
 		if err != nil {
 			/*
 			 * Todo: alert, write in kafka, etc
@@ -77,10 +79,13 @@ func ProcessRollbackRequests(req *http.Request, steps []config.Steps, ix int) (r
 	return
 }
 
-func processRequest(req *http.Request, step config.Steps) (body []byte, err error) {
+func processRequest(uTID string, req *http.Request, step config.Steps) (body []byte, err error) {
 	client := &http.Client{
 		Timeout: time.Duration(step.Success.Timeout) * time.Millisecond,
 	}
+
+	// Add global transaction id
+	req.Header.Set("Universal-Transaction-ID", uTID)
 
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
