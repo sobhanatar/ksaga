@@ -1,6 +1,9 @@
 [
   {
     "endpoint": "confirm_payment",
+    "register": "the transaction process completed successfully",
+    "rollback": "the rollback process completed successfully",
+    "rollback_failed": "the rollback process failed to complete",
     "steps": [
       {
         "alias": "payment",
@@ -23,8 +26,7 @@
           "header": {
             "Foo": "Bar"
           },
-          "body": true,
-          "message": "The endpoint didn't provide response"
+          "body": true
         }
       },
       {
@@ -48,8 +50,7 @@
           "header": {
             "Foo": "Bar"
           },
-          "body": true,
-          "message": ""
+          "body": true
         }
       },
       {
@@ -64,18 +65,16 @@
           "header": {
             "Foo": "Bar"
           },
-          "body": true,
-          "message": ""
+          "body": true
         },
         "failure": {
-          "url": "last node require no failure url",
+          "url": "http://127.0.0.1:6102/api/krakend/library/rollback",
           "method": "POST",
           "timeout": 300,
           "header": {
             "Foo": "Bar"
           },
-          "body": false,
-          "message": ""
+          "body": false
         }
       }
     ]

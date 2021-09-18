@@ -61,7 +61,7 @@
           "url_pattern": "/api/krakend/payment/register",
           "extra_config": {
             "github.com/devopsfaith/krakend/transport/http/client/executor": {
-              "name": "fidiboSagaClient",
+              "name": "sagaClient",
               "endpoint": "confirm_payment"
             }
           }

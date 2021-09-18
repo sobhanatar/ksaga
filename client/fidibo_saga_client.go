@@ -11,7 +11,7 @@ import (
 )
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
-var ClientRegisterer = registerer("fidiboSagaClient")
+var ClientRegisterer = registerer("sagaClient")
 
 type registerer string
 
@@ -49,7 +49,7 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			uTID string
 		)
 
-		//the address should go into toml
+		//todo: the address should go into toml
 		err = cfg.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
 		if err != nil {
 			fmt.Println(err.Error())
@@ -72,19 +72,16 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		if err != nil {
 			resp, err = controllers.ProcessRollbackRequests(uTID, req, cfg[ix].Steps, fi)
 			if err != nil {
-				fmt.Println(messages.CallServiceRollbackError)
-				resp = messages.GenerateRollbackFailMessage(&w)
+				resp = messages.GenerateRollbackFailMessage(&w, map[string]string{"message": cfg[ix].RollbackFailed})
 				_, _ = w.Write(resp)
 				return
 			}
-			fmt.Println(messages.CallServiceRollback)
-			resp = messages.GenerateRollbackSuccessMessage(&w)
+			resp = messages.GenerateRollbackSuccessMessage(&w, map[string]string{"message": cfg[ix].Rollback})
 			_, _ = w.Write(resp)
 			return
 		}
 
-		fmt.Println(messages.CallService)
-		resp = messages.GenerateSuccessMessage(&w)
+		resp = messages.GenerateSuccessMessage(&w, map[string]string{"message": cfg[ix].Register})
 		_, _ = w.Write(resp)
 
 	}), nil

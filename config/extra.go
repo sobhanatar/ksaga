@@ -5,7 +5,6 @@ type Configuration struct {
 	Method  string            `json:"method"`
 	Timeout int               `json:"timeout"`
 	Header  map[string]string `json:"header"`
-	Message string            `json:"message"`
 	Body    bool              `json:"body"`
 }
 
@@ -17,8 +16,11 @@ type Steps struct {
 }
 
 type ClientConfig struct {
-	Endpoint string  `json:"endpoint"`
-	Steps    []Steps `json:"steps"`
+	Endpoint       string  `json:"endpoint"`
+	Register       string  `json:"register"`
+	Rollback       string  `json:"rollback"`
+	RollbackFailed string  `json:"rollback_failed"`
+	Steps          []Steps `json:"steps"`
 }
 
 type ClientConfigs []ClientConfig

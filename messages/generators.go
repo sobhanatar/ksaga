@@ -5,23 +5,28 @@ import (
 	"net/http"
 )
 
-func GenerateSuccessMessage(w *http.ResponseWriter) (resp []byte) {
-	resp, _ = json.Marshal(map[string]string{"message": "Transaction completed successfully"})
-	(*w).Header().Add("Content-Type", "application/json")
+const (
+	Key   = "Content-Type"
+	Value = "application/json"
+)
+
+func GenerateSuccessMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
+	resp, _ = json.Marshal(m)
+	(*w).Header().Add(Key, Value)
 
 	return
 }
 
-func GenerateRollbackFailMessage(w *http.ResponseWriter) (resp []byte) {
-	resp, _ = json.Marshal(map[string]string{"message": "Rolling back failed"})
-	(*w).Header().Add("Content-Type", "application/json")
+func GenerateRollbackSuccessMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
+	resp, _ = json.Marshal(m)
+	(*w).Header().Add(Key, Value)
 
 	return
 }
 
-func GenerateRollbackSuccessMessage(w *http.ResponseWriter) (resp []byte) {
-	resp, _ = json.Marshal(map[string]string{"message": "Rolling back completed successfully"})
-	(*w).Header().Add("Content-Type", "application/json")
+func GenerateRollbackFailMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
+	resp, _ = json.Marshal(m)
+	(*w).Header().Add(Key, Value)
 
 	return
 }
