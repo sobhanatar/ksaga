@@ -11,8 +11,8 @@ type Configuration struct {
 type Steps struct {
 	Alias    string        `json:"alias"`
 	Statuses []int         `json:"statuses"`
-	Success  Configuration `json:"success"`
-	Failure  Configuration `json:"failure"`
+	Register Configuration `json:"register"`
+	Rollback Configuration `json:"rollback"`
 }
 
 type ClientConfig struct {

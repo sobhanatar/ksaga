@@ -10,21 +10,7 @@ const (
 	Value = "application/json"
 )
 
-func GenerateSuccessMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
-	resp, _ = json.Marshal(m)
-	(*w).Header().Add(Key, Value)
-
-	return
-}
-
-func GenerateRollbackSuccessMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
-	resp, _ = json.Marshal(m)
-	(*w).Header().Add(Key, Value)
-
-	return
-}
-
-func GenerateRollbackFailMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
+func GenerateMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
 	resp, _ = json.Marshal(m)
 	(*w).Header().Add(Key, Value)
 

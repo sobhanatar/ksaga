@@ -10,7 +10,7 @@
         "statuses": [
           200
         ],
-        "success": {
+        "register": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/register",
           "method": "POST",
           "timeout": 10000,
@@ -19,7 +19,7 @@
           },
           "body": true
         },
-        "failure": {
+        "rollback": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
           "method": "POST",
           "timeout": 300,
@@ -34,7 +34,7 @@
         "statuses": [
           200
         ],
-        "success": {
+        "register": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
           "timeout": 10000,
@@ -43,7 +43,7 @@
           },
           "body": true
         },
-        "failure": {
+        "rollback": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
           "method": "POST",
           "timeout": 300,
@@ -58,7 +58,7 @@
         "statuses": [
           200
         ],
-        "success": {
+        "register": {
           "url": "http://127.0.0.1:6102/api/krakend/library/register",
           "method": "POST",
           "timeout": 10000,
@@ -67,7 +67,7 @@
           },
           "body": true
         },
-        "failure": {
+        "rollback": {
           "url": "http://127.0.0.1:6102/api/krakend/library/rollback",
           "method": "POST",
           "timeout": 300,

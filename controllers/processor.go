@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	Success = "success"
-	Failure = "failure"
+	Register = "register"
+	Rollback = "rollback"
 )
 
 //ProcessRequests call backend services based on th defined services on go
@@ -28,7 +28,7 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) ([]by
 
 	for ix, step := range steps {
 		fmt.Println(fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
-		req = buildRequest(Success, steps[ix], req, resp)
+		req = buildRequest(Register, steps[ix], req, resp)
 
 		resp, err = processRequest(uTID, req, step)
 		if err != nil {
@@ -37,7 +37,7 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) ([]by
 		}
 
 		if ix < sc-1 {
-			req = buildRequest(Success, steps[ix+1], req, resp)
+			req = buildRequest(Register, steps[ix+1], req, resp)
 		}
 	}
 
@@ -47,7 +47,7 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) ([]by
 //ProcessRollbackRequests call backend rollback requests based on th defined services on go
 func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, ix int) (response []byte, err error) {
 	for step := ix; step >= 0; step-- {
-		req = buildRequest(Failure, steps[step], req, nil)
+		req = buildRequest(Rollback, steps[step], req, nil)
 		fmt.Println(fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
 
 		_, err = processRequest(uTID, req, steps[step])
@@ -65,7 +65,7 @@ func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Step
 
 func processRequest(uTID string, req *http.Request, step config.Steps) (body []byte, err error) {
 	client := &http.Client{
-		Timeout: time.Duration(step.Success.Timeout) * time.Millisecond,
+		Timeout: time.Duration(step.Register.Timeout) * time.Millisecond,
 	}
 
 	// Add global transaction id
@@ -94,9 +94,9 @@ func processRequest(uTID string, req *http.Request, step config.Steps) (body []b
 func buildRequest(state string, step config.Steps, req *http.Request, resp []byte) *http.Request {
 	var body = new(bytes.Buffer)
 
-	conf := step.Success
-	if state == Failure {
-		conf = step.Failure
+	conf := step.Register
+	if state == Rollback {
+		conf = step.Rollback
 	}
 
 	// If the next service declared need for the body and body is not nil then pass it in
