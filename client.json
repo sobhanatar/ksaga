@@ -7,7 +7,7 @@
     "steps": [
       {
         "alias": "payment",
-        "timeout": 5000,
+        "timeout": 10000,
         "retry_max": 2,
         "retry_wait_min": 300,
         "retry_wait_max": 300,
