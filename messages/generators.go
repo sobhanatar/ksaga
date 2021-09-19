@@ -10,7 +10,7 @@ const (
 	Value = "application/json"
 )
 
-func GenerateMessage(w *http.ResponseWriter, m map[string]string) (resp []byte) {
+func GenerateMessage(w *http.ResponseWriter, m map[string]interface{}) (resp []byte) {
 	resp, _ = json.Marshal(m)
 	(*w).Header().Add(Key, Value)
 

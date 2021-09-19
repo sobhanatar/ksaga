@@ -2,4 +2,7 @@ module newgit.fidibo.com/fidiborearc/krakend/plugins/saga
 
 go 1.16
 
-require github.com/google/uuid v1.2.0
+require (
+	github.com/google/uuid v1.2.0
+	github.com/hashicorp/go-retryablehttp v0.6.8
+)

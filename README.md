@@ -28,18 +28,20 @@ This file can contain as many transactions as you want, and each transaction hav
 - `rollback_failed`: the message (key) to the message that will be sent back to user after the failure in rollback.
 - `steps`: the steps that is required to complete a transaction:
     - `alias`: a name for the backend service. This can be any name use in logging the process
+    - `timeout`: the time in `milliseconds` that http handler will wait for response
+    -  `retry_max`: the maximum number of retries
+    -  `retry_wait_min`: the minimum time the client wait in `milliseconds`
+    -  `retry_wait_max`: the maximum time the client wait in `milliseconds`
     - `statuses`: array of accepted status codes that comeback from backend services. It's important to mention that
       these statuses should just include 2xx statuses.
     - `register`: this part contains the required information for calling backend services:
         - `url`: the url to call the register endpoint of backend service
         - `method`: the method that should be used to call the endpoint
-        - `timeout`: the time in `milliseconds` that http handler will wait for response
         - `header`: the additional headers required for this service in `{"kay":"value", "key":"value"}` format.
         - `body`: the boolean indicates that this service requires the body from previous service.
     - `rollback`:
         - `url`: same as in register
         - `method`: same as in register
-        - `timeout`: same as in register
         - `header`: same as in register
         - `body`: same as in register
 

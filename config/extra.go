@@ -1,18 +1,21 @@
 package config
 
 type Configuration struct {
-	Url     string            `json:"url"`
-	Method  string            `json:"method"`
-	Timeout int               `json:"timeout"`
-	Header  map[string]string `json:"header"`
-	Body    bool              `json:"body"`
+	Url    string            `json:"url"`
+	Method string            `json:"method"`
+	Header map[string]string `json:"header"`
+	Body   bool              `json:"body"`
 }
 
 type Steps struct {
-	Alias    string        `json:"alias"`
-	Statuses []int         `json:"statuses"`
-	Register Configuration `json:"register"`
-	Rollback Configuration `json:"rollback"`
+	Alias        string        `json:"alias"`
+	Timeout      int           `json:"timeout"`
+	RetryMax     int           `json:"retry_max"`
+	RetryWaitMin int           `json:"retry_wait_min"`
+	RetryWaitMax int           `json:"retry_wait_max"`
+	Statuses     []int         `json:"statuses"`
+	Register     Configuration `json:"register"`
+	Rollback     Configuration `json:"rollback"`
 }
 
 type ClientConfig struct {

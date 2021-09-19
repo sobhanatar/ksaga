@@ -72,16 +72,16 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		if err != nil {
 			resp, err = controllers.ProcessRollbackRequests(uTID, req, cfg[ix].Steps, fi)
 			if err != nil {
-				resp = messages.GenerateMessage(&w, map[string]string{"message": cfg[ix].RollbackFailed})
+				resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": cfg[ix].RollbackFailed})
 				_, _ = w.Write(resp)
 				return
 			}
-			resp = messages.GenerateMessage(&w, map[string]string{"message": cfg[ix].Rollback})
+			resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": cfg[ix].Rollback})
 			_, _ = w.Write(resp)
 			return
 		}
 
-		resp = messages.GenerateMessage(&w, map[string]string{"message": cfg[ix].Register})
+		resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 200, "message": cfg[ix].Register})
 		_, _ = w.Write(resp)
 
 	}), nil

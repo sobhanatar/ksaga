@@ -7,13 +7,16 @@
     "steps": [
       {
         "alias": "payment",
+        "timeout": 5000,
+        "retry_max": 2,
+        "retry_wait_min": 300,
+        "retry_wait_max": 300,
         "statuses": [
           200
         ],
         "register": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/register",
           "method": "POST",
-          "timeout": 10000,
           "header": {
             "Foo": "Bar"
           },
@@ -22,7 +25,6 @@
         "rollback": {
           "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
           "method": "POST",
-          "timeout": 300,
           "header": {
             "Foo": "Bar"
           },
@@ -31,13 +33,16 @@
       },
       {
         "alias": "invoice",
+        "timeout": 5000,
+        "retry_max": 3,
+        "retry_wait_min": 300,
+        "retry_wait_max": 300,
         "statuses": [
           200
         ],
         "register": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
           "method": "POST",
-          "timeout": 10000,
           "header": {
             "Foo": "Bar"
           },
@@ -46,7 +51,6 @@
         "rollback": {
           "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
           "method": "POST",
-          "timeout": 300,
           "header": {
             "Foo": "Bar"
           },
@@ -55,13 +59,16 @@
       },
       {
         "alias": "library",
+        "timeout": 5000,
+        "retry_max": 2,
+        "retry_wait_min": 300,
+        "retry_wait_max": 300,
         "statuses": [
           200
         ],
         "register": {
           "url": "http://127.0.0.1:6102/api/krakend/library/register",
           "method": "POST",
-          "timeout": 10000,
           "header": {
             "Foo": "Bar"
           },
@@ -70,7 +77,6 @@
         "rollback": {
           "url": "http://127.0.0.1:6102/api/krakend/library/rollback",
           "method": "POST",
-          "timeout": 300,
           "header": {
             "Foo": "Bar"
           },

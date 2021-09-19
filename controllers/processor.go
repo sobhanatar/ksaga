@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
@@ -64,19 +65,22 @@ func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Step
 }
 
 func processRequest(uTID string, req *http.Request, step config.Steps) (body []byte, err error) {
-	client := &http.Client{
-		Timeout: time.Duration(step.Register.Timeout) * time.Millisecond,
-	}
+	rc := retryablehttp.NewClient()
+	rc.RetryMax = step.RetryMax
+	rc.RetryWaitMin = time.Duration(step.RetryWaitMin) * time.Millisecond
+	rc.RetryWaitMax = time.Duration(step.RetryWaitMax) * time.Millisecond
+
+	client := rc.StandardClient()
+	client.Timeout = time.Duration(step.Timeout) * time.Millisecond
 
 	// Add global transaction id
 	req.Header.Set("Universal-Transaction-ID", uTID)
 
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return body, messages.BackendCallError(step.Alias, err.Error())
 	}
+	defer resp.Body.Close()
 
 	ex, _ := helpers.InSlice(resp.StatusCode, step.Statuses)
 	if !ex {
