@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/logs"
 )
 
 var HandlerRegisterer = registerer("fidiboSagaHandler")
@@ -22,7 +23,7 @@ type Message struct {
 type registerer string
 
 func init() {
-	fmt.Println("Handler: fidiboSagaHandler plugin loaded!!!")
+	logs.Log(logs.INFO, "Handler: fidiboSagaHandler plugin loaded!!!")
 }
 
 func (r registerer) RegisterHandlers(f func(
@@ -48,7 +49,7 @@ func (r registerer) registerHandlers(ctx context.Context, extra map[string]inter
 		//response, _ := io.ReadAll(req.Body)
 		//fmt.Println("Handler: " + string(response))
 
-		_, _ = w.Write([]byte("HAPAL"))
+		_, _ = w.Write([]byte("123"))
 		handler.ServeHTTP(w, req)
 	}), nil
 }

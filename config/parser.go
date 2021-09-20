@@ -38,48 +38,77 @@ func (cfg *ClientConfig) ParseClient(addr string) (err error) {
 		return errors.New(fmt.Sprintf(messages.ClientConfigFIleUnmarshalError, err.Error()))
 	}
 
-	if err = cfg.validateClient(); err != nil {
-		return errors.New(err.Error())
+	if errs := cfg.validate(); len(errs) > 0 {
+		errL := strings.Join(errs, "\n")
+		return errors.New(errL)
 	}
 
 	return
 }
 
-func (cfg *ClientConfig) validateClient() (err error) {
+func (cfg *ClientConfig) validate() (err []string) {
+	statuses := []int{
+		http.StatusOK,
+		http.StatusCreated,
+		http.StatusAccepted,
+		http.StatusNoContent,
+		http.StatusResetContent,
+		http.StatusAlreadyReported,
+		http.StatusIMUsed,
+		http.StatusMultiStatus,
+		http.StatusPaymentRequired,
+		http.StatusNonAuthoritativeInfo,
+	}
+	methods := []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodPut, http.MethodDelete}
+
 	for k, v := range (*cfg).Endpoints {
 		if len(strings.Trim(v.Endpoint, " ")) == 0 {
-			return errors.New(fmt.Sprintf(messages.ClientConfigEndpointEmptyError, k))
+			err = append(err, fmt.Sprintf(messages.ClientConfigEndpointEmptyError, k+1))
 		}
 
 		if len(strings.Trim(v.Register, " ")) == 0 ||
 			len(strings.Trim(v.Rollback, " ")) == 0 ||
 			len(strings.Trim(v.RollbackFailed, " ")) == 0 {
-			return errors.New(fmt.Sprintf(messages.ClientConfigMessagesEmptyError, k))
+			err = append(err, fmt.Sprintf(messages.ClientConfigMessagesEmptyError, k+1))
 		}
 
 		for ks, vs := range v.Steps {
-			// todo: problem solving area: how can I check only 2xx numbers available here
-
 			if len(strings.Trim(vs.Alias, " ")) == 0 {
-				return errors.New(fmt.Sprintf(messages.ClientConfigAliasEmptyError, k, ks))
+				err = append(err, fmt.Sprintf(messages.ClientConfigAliasEmptyError, k+1, ks+1))
+			}
+
+			if vs.Timeout <= 0 {
+				err = append(err, fmt.Sprintf(messages.ClientConfigTimeoutError, k+1, ks+1))
+			}
+
+			if vs.RetryMax < 0 {
+				err = append(err, fmt.Sprintf(messages.ClientConfigRetryError, k+1, ks+1))
+			}
+
+			if vs.RetryWaitMax <= 0 || vs.RetryWaitMin <= 0 {
+				err = append(err, fmt.Sprintf(messages.ClientConfigRetryWaitError, k+1, ks+1))
 			}
 
 			if len(strings.Trim(vs.Register.Url, " ")) == 0 {
-				return errors.New(fmt.Sprintf(messages.ClientConfigUrlEmptyError, k, ks))
+				err = append(err, fmt.Sprintf(messages.ClientConfigUrlEmptyError, k+1, ks+1))
 			}
 
 			if len(strings.Trim(vs.Rollback.Url, " ")) == 0 {
-				return errors.New(fmt.Sprintf(messages.ClientConfigUrlEmptyError, k, ks))
+				err = append(err, fmt.Sprintf(messages.ClientConfigUrlEmptyError, k+1, ks+1))
 			}
 
-			if ex, _ := helpers.InSlice(vs.Register.Method, []string{http.MethodGet, http.MethodPost, http.MethodPatch,
-				http.MethodPut, http.MethodDelete}); !ex {
-				return errors.New(fmt.Sprintf(messages.ClientConfigMethodError, k, ks))
+			for _, st := range vs.Statuses {
+				if ex, _ := helpers.InSlice(st, statuses); !ex {
+					err = append(err, fmt.Sprintf(messages.ClientConfigStatusError, k+1, ks+1))
+				}
 			}
 
-			if ex, _ := helpers.InSlice(vs.Rollback.Method, []string{http.MethodGet, http.MethodPost, http.MethodPatch,
-				http.MethodPut, http.MethodDelete}); !ex {
-				return errors.New(fmt.Sprintf(messages.ClientConfigMethodError, k, ks))
+			if ex, _ := helpers.InSlice(vs.Register.Method, methods); !ex {
+				err = append(err, fmt.Sprintf(messages.ClientConfigMethodError, k+1, ks+1))
+			}
+
+			if ex, _ := helpers.InSlice(vs.Rollback.Method, methods); !ex {
+				err = append(err, fmt.Sprintf(messages.ClientConfigMethodError, k+1, ks+1))
 			}
 		}
 	}

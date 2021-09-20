@@ -7,7 +7,9 @@ import (
 	"io"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/exceptions"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/helpers"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/logs"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
 	"time"
 )
@@ -18,23 +20,23 @@ const (
 )
 
 //ProcessRequests call backend services based on th defined services on go
-func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) ([]byte, int, error) {
+func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) (int, error) {
 	var (
 		resp []byte
 		err  error
 	)
 
 	sc := len(steps)
-	fmt.Println(fmt.Sprintf(messages.CallNumberOfBackendService, sc))
+	logs.Log(logs.INFO, fmt.Sprintf(messages.CallNumberOfBackendService, sc))
 
 	for ix, step := range steps {
-		fmt.Println(fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
+		logs.Log(logs.INFO, fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
 		req = buildRequest(Register, steps[ix], req, resp)
 
 		resp, err = processRequest(uTID, req, step)
 		if err != nil {
-			fmt.Println(err.Error())
-			return resp, ix, err
+			logs.Log(logs.ERROR, err.Error())
+			return ix, err
 		}
 
 		if ix < sc-1 {
@@ -42,21 +44,21 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) ([]by
 		}
 	}
 
-	return resp, 0, err
+	return 0, err
 }
 
 //ProcessRollbackRequests call backend rollback requests based on th defined services on go
-func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, ix int) (response []byte, err error) {
+func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, ix int) (err error) {
 	for step := ix; step >= 0; step-- {
 		req = buildRequest(Rollback, steps[step], req, nil)
-		fmt.Println(fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
+		logs.Log(logs.INFO, fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
 
 		_, err = processRequest(uTID, req, steps[step])
 		if err != nil {
 			/*
 			 * Todo: alert, write in kafka, etc
 			 */
-			fmt.Println(err.Error())
+			logs.Log(logs.ERROR, err.Error())
 			return
 		}
 	}
@@ -78,18 +80,18 @@ func processRequest(uTID string, req *http.Request, step config.Steps) (body []b
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return body, messages.BackendCallError(step.Alias, err.Error())
+		return body, exceptions.BackendCallError(step.Alias, err.Error())
 	}
 	defer resp.Body.Close()
 
 	ex, _ := helpers.InSlice(resp.StatusCode, step.Statuses)
 	if !ex {
-		return body, messages.StatusError(step.Alias, resp.StatusCode)
+		return body, exceptions.StatusError(step.Alias, resp.StatusCode)
 	}
 
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
-		return body, messages.CloseBodyError(step.Alias, err.Error())
+		return body, exceptions.CloseBodyError(step.Alias, err.Error())
 	}
 
 	return

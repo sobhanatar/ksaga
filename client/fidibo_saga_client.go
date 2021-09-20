@@ -7,27 +7,32 @@ import (
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/controllers"
+	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/logs"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
+)
+
+const (
+	HKey   = "Content-Type"
+	HVal   = "application/json"
+	CfgAdr = "./plugins/saga_client.json"
 )
 
 type registerer string
 
+var cfg config.ClientConfig
+
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
 var ClientRegisterer = registerer("sagaClient")
 
-var (
-	cfg    config.ClientConfig
-	cfgAdr = fmt.Sprintf("./plugins/%s", "saga_client.json")
-)
-
 func init() {
-	err := cfg.ParseClient(cfgAdr)
+	err := cfg.ParseClient(CfgAdr)
 	if err != nil {
-		fmt.Println(err.Error())
+		logs.Log(logs.ERROR, messages.ClientPluginLoadError)
+		fmt.Println(logs.ERROR, err.Error())
 		return
 	}
 
-	fmt.Println(fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
+	logs.Log(logs.INFO, fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
 }
 
 func (r registerer) RegisterClients(f func(
@@ -54,7 +59,6 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var (
-			resp []byte
 			fi   int
 			uTID string
 		)
@@ -65,29 +69,38 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			/*
 			 * todo: alerting / registering event in sentry, kafka, ...
 			 */
-			fmt.Println(fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint()))
+			logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint()))
 			return
 		}
 
 		uTID = uuid.New().String()
-		fmt.Println(fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
+		logs.Log(logs.INFO, fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
 
 		ep := cfg.Endpoints[ix]
-		resp, fi, err = controllers.ProcessRequests(uTID, req, ep.Steps)
+		fi, err = controllers.ProcessRequests(uTID, req, ep.Steps)
 		if err != nil {
-			resp, err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fi)
+			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fi)
 			if err != nil {
-				resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": ep.RollbackFailed})
-				_, _ = w.Write(resp)
+				w.Header().Add(HKey, HVal)
+				_, err = w.Write(messages.Generate(map[string]interface{}{"status": 422, "message": ep.RollbackFailed}))
+				if err != nil {
+					logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
+				}
 				return
 			}
-			resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": ep.Rollback})
-			_, _ = w.Write(resp)
+			w.Header().Add(HKey, HVal)
+			_, err = w.Write(messages.Generate(map[string]interface{}{"status": 422, "message": ep.Rollback}))
+			if err != nil {
+				logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
+			}
 			return
 		}
 
-		resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 200, "message": ep.Register})
-		_, _ = w.Write(resp)
+		w.Header().Add(HKey, HVal)
+		_, err = w.Write(messages.Generate(map[string]interface{}{"status": 200, "message": ep.Register}))
+		if err != nil {
+			logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
+		}
 
 	}), nil
 }
