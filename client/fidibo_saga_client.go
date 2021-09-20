@@ -10,13 +10,24 @@ import (
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
 )
 
+type registerer string
+
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
 var ClientRegisterer = registerer("sagaClient")
 
-type registerer string
+var (
+	cfg    config.ClientConfig
+	cfgAdr = fmt.Sprintf("./plugins/%s", "saga_client.json")
+)
 
 func init() {
-	fmt.Println(messages.ClientPluginLoad)
+	err := cfg.ParseClient(cfgAdr)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	fmt.Println(fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
 }
 
 func (r registerer) RegisterClients(f func(
@@ -43,19 +54,12 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var (
-			cfg  config.ClientConfigs
 			resp []byte
 			fi   int
 			uTID string
 		)
 
 		//todo: the address should go into toml
-		err = cfg.ParseClient(fmt.Sprintf("./plugins/%s", "client.json"))
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
 		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
 			/*
@@ -68,20 +72,21 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		uTID = uuid.New().String()
 		fmt.Println(fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
 
-		resp, fi, err = controllers.ProcessRequests(uTID, req, cfg[ix].Steps)
+		ep := cfg.Endpoints[ix]
+		resp, fi, err = controllers.ProcessRequests(uTID, req, ep.Steps)
 		if err != nil {
-			resp, err = controllers.ProcessRollbackRequests(uTID, req, cfg[ix].Steps, fi)
+			resp, err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fi)
 			if err != nil {
-				resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": cfg[ix].RollbackFailed})
+				resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": ep.RollbackFailed})
 				_, _ = w.Write(resp)
 				return
 			}
-			resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": cfg[ix].Rollback})
+			resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 422, "message": ep.Rollback})
 			_, _ = w.Write(resp)
 			return
 		}
 
-		resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 200, "message": cfg[ix].Register})
+		resp = messages.GenerateMessage(&w, map[string]interface{}{"status": 200, "message": ep.Register})
 		_, _ = w.Write(resp)
 
 	}), nil

@@ -18,7 +18,7 @@ type Steps struct {
 	Rollback     Configuration `json:"rollback"`
 }
 
-type ClientConfig struct {
+type Endpoints struct {
 	Endpoint       string  `json:"endpoint"`
 	Register       string  `json:"register"`
 	Rollback       string  `json:"rollback"`
@@ -26,4 +26,7 @@ type ClientConfig struct {
 	Steps          []Steps `json:"steps"`
 }
 
-type ClientConfigs []ClientConfig
+type ClientConfig struct {
+	Name      string
+	Endpoints []Endpoints
+}
