@@ -14,12 +14,12 @@ import (
 const (
 	HKey   = "Content-Type"
 	HVal   = "application/json"
-	CfgAdr = "./plugins/saga_client.json"
+	CfgAdr = "./plugins/saga_client_settings.json"
 )
 
 type registerer string
 
-var cfg config.ClientConfig
+var cfg config.SagaClientConfig
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
 var ClientRegisterer = registerer("sagaClient")
@@ -63,17 +63,13 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 			uTID string
 		)
 
-		//todo: the address should go into toml
+		uTID = uuid.New().String()
+
 		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
-			/*
-			 * todo: alerting / registering event in sentry, kafka, ...
-			 */
 			logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint()))
 			return
 		}
-
-		uTID = uuid.New().String()
 		logs.Log(logs.INFO, fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
 
 		ep := cfg.Endpoints[ix]

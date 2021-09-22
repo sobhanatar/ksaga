@@ -27,8 +27,8 @@ func (ec *ExtraConfig) ParseExtra(extra map[string]interface{}) (err error) {
 	return
 }
 
-//ParseClient parse the saga_client.json file
-func (cfg *ClientConfig) ParseClient(addr string) (err error) {
+//ParseClient parse the saga_client_settings.json file
+func (cfg *SagaClientConfig) ParseClient(addr string) (err error) {
 	f, err := os.ReadFile(addr)
 	if err != nil {
 		return errors.New(fmt.Sprintf(messages.ClientConfigFileError, err.Error()))
@@ -46,7 +46,7 @@ func (cfg *ClientConfig) ParseClient(addr string) (err error) {
 	return
 }
 
-func (cfg *ClientConfig) validate() (err []string) {
+func (cfg *SagaClientConfig) validate() (err []string) {
 	statuses := []int{
 		http.StatusOK,
 		http.StatusCreated,
@@ -117,13 +117,13 @@ func (cfg *ClientConfig) validate() (err []string) {
 }
 
 //EndpointIndex get the index of matching endpoint if exists
-func (cfg *ClientConfig) EndpointIndex(endpoint string) (ex bool, ix int) {
+func (cfg *SagaClientConfig) EndpointIndex(endpoint string) (ex bool, ix int) {
 	eps := cfg.parsEndpoints()
 	return helpers.InSlice(endpoint, eps)
 }
 
 //parsEndpoints get all available endpoints in client config file
-func (cfg *ClientConfig) parsEndpoints() (eps []string) {
+func (cfg *SagaClientConfig) parsEndpoints() (eps []string) {
 	for _, k := range (*cfg).Endpoints {
 		eps = append(eps, k.Endpoint)
 	}

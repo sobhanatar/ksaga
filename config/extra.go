@@ -26,7 +26,6 @@ type Endpoints struct {
 	Steps          []Steps `json:"steps"`
 }
 
-type ClientConfig struct {
-	Name      string
+type SagaClientConfig struct {
 	Endpoints []Endpoints
 }
