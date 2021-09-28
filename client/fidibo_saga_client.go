@@ -15,6 +15,7 @@ const (
 	HKey   = "Content-Type"
 	HVal   = "application/json"
 	CfgAdr = "./plugins/saga_client_settings.json"
+	UTID   = "utid"
 )
 
 type registerer string
@@ -43,9 +44,7 @@ func (r registerer) RegisterClients(f func(
 }
 
 func (r registerer) registerClients(ctx context.Context, extra map[string]interface{}) (http.Handler, error) {
-	var (
-		ec config.ExtraConfig
-	)
+	var ec config.ExtraConfig
 
 	err := ec.ParseExtra(extra)
 	if err != nil {
@@ -67,9 +66,12 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 
 		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
-			logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint()))
+			m := fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint())
+			logs.Log2File(logs.ERROR, m, map[string]interface{}{UTID: uTID})
+			logs.Log(logs.ERROR, m)
 			return
 		}
+
 		logs.Log(logs.INFO, fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
 
 		ep := cfg.Endpoints[ix]
@@ -77,26 +79,24 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		if err != nil {
 			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fi)
 			if err != nil {
-				w.Header().Add(HKey, HVal)
-				_, err = w.Write(messages.Generate(map[string]interface{}{"status": 422, "message": ep.RollbackFailed}))
-				if err != nil {
-					logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
-				}
+				logs.Log2File(logs.PANIC, "transaction rollback failed", map[string]interface{}{UTID: uTID})
+				generateResponse(&w, map[string]interface{}{"status": 422, "message": ep.RollbackFailed})
 				return
 			}
-			w.Header().Add(HKey, HVal)
-			_, err = w.Write(messages.Generate(map[string]interface{}{"status": 422, "message": ep.Rollback}))
-			if err != nil {
-				logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
-			}
+
+			logs.Log2File(logs.ERROR, "transaction rollback", map[string]interface{}{UTID: uTID})
+			generateResponse(&w, map[string]interface{}{"status": 422, "message": ep.Rollback})
 			return
 		}
 
-		w.Header().Add(HKey, HVal)
-		_, err = w.Write(messages.Generate(map[string]interface{}{"status": 200, "message": ep.Register}))
-		if err != nil {
-			logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
-		}
-
+		generateResponse(&w, map[string]interface{}{"status": 200, "message": ep.Register})
 	}), nil
+}
+
+func generateResponse(w *http.ResponseWriter, m map[string]interface{}) {
+	(*w).Header().Add(HKey, HVal)
+	_, err := (*w).Write(messages.Generate(m))
+	if err != nil {
+		logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
+	}
 }
