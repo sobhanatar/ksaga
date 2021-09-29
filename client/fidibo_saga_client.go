@@ -15,6 +15,7 @@ const (
 	PName  = "sagaClient"
 	UTID   = "utid"
 	Msg    = "message"
+	Extra  = "extra"
 	Status = "status"
 	HKey   = "Content-Type"
 	HVal   = "application/json"
@@ -83,17 +84,17 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		if err != nil {
 			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fs-1)
 			if err != nil {
-				logs.LogF(logs.Panic, ep.RollbackFailed, map[string]interface{}{UTID: uTID, "extra": ep.Steps[fs]})
+				logs.LogF(logs.Panic, ep.RollbackFailed, map[string]interface{}{UTID: uTID, Extra: ep.Steps[fs].Alias})
 				generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.RollbackFailed})
 				return
 			}
 
-			logs.LogF(logs.Error, ep.Rollback, map[string]interface{}{UTID: uTID, "extra": ep.Steps[fs]})
+			logs.LogF(logs.Error, ep.Rollback, map[string]interface{}{UTID: uTID, Extra: ep.Steps[fs].Alias})
 			generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.Rollback})
 			return
 		}
 
-		logs.LogF(logs.Info, ep.Register, map[string]interface{}{UTID: uTID})
+		logs.LogF(logs.Info, ep.Register, map[string]interface{}{UTID: uTID, Extra: ep.Endpoint})
 		generateResponse(&w, map[string]interface{}{Status: http.StatusOK, Msg: ep.Register})
 	}), nil
 }
