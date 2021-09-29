@@ -12,10 +12,13 @@ import (
 )
 
 const (
+	PName  = "sagaClient"
+	UTID   = "utid"
+	Msg    = "message"
+	Status = "status"
 	HKey   = "Content-Type"
 	HVal   = "application/json"
 	CfgAdr = "./plugins/saga_client_settings.json"
-	UTID   = "utid"
 )
 
 type registerer string
@@ -23,17 +26,18 @@ type registerer string
 var cfg config.SagaClientConfig
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
-var ClientRegisterer = registerer("sagaClient")
+var ClientRegisterer = registerer(PName)
 
 func init() {
 	err := cfg.ParseClient(CfgAdr)
 	if err != nil {
-		logs.Log(logs.ERROR, messages.ClientPluginLoadError)
-		fmt.Println(logs.ERROR, err.Error())
+		logs.LogF(logs.Panic, messages.ClientPluginLoadError, map[string]interface{}{Msg: err.Error()})
+		logs.Log(logs.Panic, messages.ClientPluginLoadError)
+		fmt.Println(logs.Panic, err.Error())
 		return
 	}
 
-	logs.Log(logs.INFO, fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
+	logs.Log(logs.Info, fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
 }
 
 func (r registerer) RegisterClients(f func(
@@ -52,7 +56,7 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	}
 
 	if ec.Name() != string(r) {
-		return nil, fmt.Errorf("plugin: unknown register %s", ec.Name())
+		return nil, fmt.Errorf(messages.ClientPluginNameError, ec.Name())
 	}
 
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
@@ -67,29 +71,30 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
 			m := fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint())
-			logs.Log2File(logs.ERROR, m, map[string]interface{}{UTID: uTID})
-			logs.Log(logs.ERROR, m)
+			logs.LogF(logs.Error, m, map[string]interface{}{UTID: uTID})
+			logs.Log(logs.Error, m)
 			return
 		}
 
-		logs.Log(logs.INFO, fmt.Sprintf(messages.CallServiceGlobalTransactionID, uTID))
+		logs.Log(logs.Info, fmt.Sprintf(messages.ClientUniversalTransactionID, uTID))
 
 		ep := cfg.Endpoints[ix]
 		fi, err = controllers.ProcessRequests(uTID, req, ep.Steps)
 		if err != nil {
 			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fi)
 			if err != nil {
-				logs.Log2File(logs.PANIC, "transaction rollback failed", map[string]interface{}{UTID: uTID})
-				generateResponse(&w, map[string]interface{}{"status": 422, "message": ep.RollbackFailed})
+				logs.LogF(logs.Panic, ep.RollbackFailed, map[string]interface{}{UTID: uTID})
+				generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.RollbackFailed})
 				return
 			}
 
-			logs.Log2File(logs.ERROR, "transaction rollback", map[string]interface{}{UTID: uTID})
-			generateResponse(&w, map[string]interface{}{"status": 422, "message": ep.Rollback})
+			logs.LogF(logs.Error, ep.Rollback, map[string]interface{}{UTID: uTID})
+			generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.Rollback})
 			return
 		}
 
-		generateResponse(&w, map[string]interface{}{"status": 200, "message": ep.Register})
+		logs.LogF(logs.Info, ep.Register, map[string]interface{}{UTID: uTID})
+		generateResponse(&w, map[string]interface{}{Status: http.StatusOK, Msg: ep.Register})
 	}), nil
 }
 
@@ -97,6 +102,6 @@ func generateResponse(w *http.ResponseWriter, m map[string]interface{}) {
 	(*w).Header().Add(HKey, HVal)
 	_, err := (*w).Write(messages.Generate(m))
 	if err != nil {
-		logs.Log(logs.ERROR, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
+		logs.Log(logs.Error, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
 	}
 }

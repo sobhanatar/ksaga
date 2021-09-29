@@ -4,7 +4,7 @@
   "port": 8080,
   "cache_ttl": "3600s",
   "output_encoding": "json",
-  "timeout": "10s",
+  "timeout": "30s",
   "plugin": {
     "pattern": ".so",
     "folder": "./plugins/"

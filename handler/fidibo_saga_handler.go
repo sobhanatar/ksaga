@@ -23,7 +23,7 @@ type Message struct {
 type registerer string
 
 func init() {
-	logs.Log(logs.INFO, "Handler: fidiboSagaHandler plugin loaded!!!")
+	logs.Log(logs.Info, "Handler: fidiboSagaHandler plugin loaded!!!")
 }
 
 func (r registerer) RegisterHandlers(f func(

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/helpers"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/messages"
 	"os"
@@ -47,20 +46,6 @@ func (cfg *SagaClientConfig) ParseClient(addr string) (err error) {
 }
 
 func (cfg *SagaClientConfig) validate() (err []string) {
-	statuses := []int{
-		http.StatusOK,
-		http.StatusCreated,
-		http.StatusAccepted,
-		http.StatusNoContent,
-		http.StatusResetContent,
-		http.StatusAlreadyReported,
-		http.StatusIMUsed,
-		http.StatusMultiStatus,
-		http.StatusPaymentRequired,
-		http.StatusNonAuthoritativeInfo,
-	}
-	methods := []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodPut, http.MethodDelete}
-
 	for k, v := range (*cfg).Endpoints {
 		if len(strings.Trim(v.Endpoint, " ")) == 0 {
 			err = append(err, fmt.Sprintf(messages.ClientConfigEndpointEmptyError, k+1))
@@ -95,20 +80,6 @@ func (cfg *SagaClientConfig) validate() (err []string) {
 
 			if len(strings.Trim(vs.Rollback.Url, " ")) == 0 {
 				err = append(err, fmt.Sprintf(messages.ClientConfigUrlEmptyError, k+1, ks+1))
-			}
-
-			for _, st := range vs.Statuses {
-				if ex, _ := helpers.InSlice(st, statuses); !ex {
-					err = append(err, fmt.Sprintf(messages.ClientConfigStatusError, k+1, ks+1))
-				}
-			}
-
-			if ex, _ := helpers.InSlice(vs.Register.Method, methods); !ex {
-				err = append(err, fmt.Sprintf(messages.ClientConfigMethodError, k+1, ks+1))
-			}
-
-			if ex, _ := helpers.InSlice(vs.Rollback.Method, methods); !ex {
-				err = append(err, fmt.Sprintf(messages.ClientConfigMethodError, k+1, ks+1))
 			}
 		}
 	}

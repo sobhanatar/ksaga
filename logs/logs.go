@@ -9,20 +9,20 @@ import (
 )
 
 const (
-	PANIC = 0
-	ERROR = 1
-	WARN  = 2
-	INFO  = 3
-	DEBUG = 4
+	Panic = 0
+	Error = 1
+	Warn  = 2
+	Info  = 3
+	Debug = 4
 
-	Prefix = "[KRAKEND][SAGA-CLIENT]"
-	Reset  = "\033[0m"
-	Red    = "\033[31m"
-	Green  = "\033[32m"
-	Yellow = "\033[33m"
-	Blue   = "\033[34m"
-	Purple = "\033[35m"
-	Gray   = "\033[37m"
+	pfx     = "[KRAKEND][SAGA-CLIENT]"
+	resetC  = "\033[0m"
+	redC    = "\033[31m"
+	greenC  = "\033[32m"
+	yellowC = "\033[33m"
+	blueC   = "\033[34m"
+	purpleC = "\033[35m"
+	grayC   = "\033[37m"
 )
 
 var log = logrus.New()
@@ -44,33 +44,33 @@ func Log(level int, m string) {
 	d := time.Now().Local().Format(fm)
 
 	switch level {
-	case INFO:
-		fmt.Println(fmt.Sprintf("%s %s %s▶ INFO%s %s", Prefix, d, Green, Reset, m))
-	case DEBUG:
-		fmt.Println(fmt.Sprintf("%s %s %s▶ DEBUG%s %s", Prefix, d, Blue, Reset, m))
-	case WARN:
-		fmt.Println(fmt.Sprintf("%s %s %s▶ WARN%s %s", Prefix, d, Yellow, Reset, m))
-	case ERROR:
-		fmt.Println(fmt.Sprintf("%s %s %s▶ ERROR%s %s", Prefix, d, Red, Reset, m))
-	case PANIC:
-		fmt.Println(fmt.Sprintf("%s %s %s▶ PANIC%s %s", Prefix, d, Purple, Reset, m))
+	case Info:
+		fmt.Println(fmt.Sprintf("%s %s %s▶ INFO%s %s", pfx, d, greenC, resetC, m))
+	case Debug:
+		fmt.Println(fmt.Sprintf("%s %s %s▶ DEBUG%s %s", pfx, d, blueC, resetC, m))
+	case Warn:
+		fmt.Println(fmt.Sprintf("%s %s %s▶ WARN%s %s", pfx, d, yellowC, resetC, m))
+	case Error:
+		fmt.Println(fmt.Sprintf("%s %s %s▶ ERROR%s %s", pfx, d, redC, resetC, m))
+	case Panic:
+		fmt.Println(fmt.Sprintf("%s %s %s▶ PANIC%s %s", pfx, d, purpleC, resetC, m))
 	default:
-		fmt.Println(fmt.Sprintf("%s %s %s▶ UNKOWN%s %s", Prefix, d, Gray, Reset, m))
+		fmt.Println(fmt.Sprintf("%s %s %s▶ UNKOWN%s %s", pfx, d, grayC, resetC, m))
 	}
 }
 
-//Log2File log required data to file
-func Log2File(level int, m string, f map[string]interface{}) {
+//LogF log required data to file
+func LogF(level int, m string, f map[string]interface{}) {
 	switch level {
-	case INFO:
+	case Info:
 		log.WithFields(f).Info(m)
-	case DEBUG:
+	case Debug:
 		log.WithFields(f).Debug(m)
-	case WARN:
+	case Warn:
 		log.WithFields(f).Warn(m)
-	case ERROR:
+	case Error:
 		log.WithFields(f).Error(m)
-	case PANIC:
+	case Panic:
 		log.WithFields(f).Panic(m)
 	default:
 		log.WithFields(f).Println(m)

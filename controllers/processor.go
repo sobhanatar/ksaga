@@ -27,15 +27,15 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) (int,
 	)
 
 	sc := len(steps)
-	logs.Log(logs.INFO, fmt.Sprintf(messages.CallNumberOfBackendService, sc))
+	logs.Log(logs.Info, fmt.Sprintf(messages.ClientBackendServices, sc))
 
 	for ix, step := range steps {
-		logs.Log(logs.INFO, fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
+		logs.Log(logs.Info, fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
 		req = buildRequest(Register, steps[ix], req, resp)
 
 		resp, err = processRequest(uTID, req, step)
 		if err != nil {
-			logs.Log(logs.ERROR, err.Error())
+			logs.Log(logs.Error, err.Error())
 			return ix, err
 		}
 
@@ -51,14 +51,14 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) (int,
 func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, ix int) (err error) {
 	for step := ix; step >= 0; step-- {
 		req = buildRequest(Rollback, steps[step], req, nil)
-		logs.Log(logs.INFO, fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
+		logs.Log(logs.Info, fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
 
 		_, err = processRequest(uTID, req, steps[step])
 		if err != nil {
 			/*
 			 * Todo: alert, write in kafka, etc
 			 */
-			logs.Log(logs.ERROR, err.Error())
+			logs.Log(logs.Error, err.Error())
 			return
 		}
 	}
