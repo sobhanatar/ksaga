@@ -2,8 +2,8 @@
   "endpoints": [
     {
       "endpoint": "confirm_payment",
-      "register": "the transaction process completed successfully",
-      "rollback": "the rollback process completed successfully",
+      "register": "the transaction was completed successfully",
+      "rollback": "the rollback process had completed",
       "rollback_failed": "the rollback process failed to complete",
       "steps": [
         {

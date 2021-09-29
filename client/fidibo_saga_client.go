@@ -62,7 +62,7 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	// return the actual handler wrapping or your custom logic, so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		var (
-			fi   int
+			fs   int
 			uTID string
 		)
 
@@ -79,16 +79,16 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		logs.Log(logs.Info, fmt.Sprintf(messages.ClientUniversalTransactionID, uTID))
 
 		ep := cfg.Endpoints[ix]
-		fi, err = controllers.ProcessRequests(uTID, req, ep.Steps)
+		fs, err = controllers.ProcessRequests(uTID, req, ep.Steps)
 		if err != nil {
-			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fi)
+			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fs-1)
 			if err != nil {
-				logs.LogF(logs.Panic, ep.RollbackFailed, map[string]interface{}{UTID: uTID})
+				logs.LogF(logs.Panic, ep.RollbackFailed, map[string]interface{}{UTID: uTID, "extra": ep.Steps[fs]})
 				generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.RollbackFailed})
 				return
 			}
 
-			logs.LogF(logs.Error, ep.Rollback, map[string]interface{}{UTID: uTID})
+			logs.LogF(logs.Error, ep.Rollback, map[string]interface{}{UTID: uTID, "extra": ep.Steps[fs]})
 			generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.Rollback})
 			return
 		}

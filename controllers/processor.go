@@ -48,16 +48,13 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) (int,
 }
 
 //ProcessRollbackRequests call backend rollback requests based on th defined services on go
-func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, ix int) (err error) {
-	for step := ix; step >= 0; step-- {
+func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, fs int) (err error) {
+	for step := fs; step >= 0; step-- {
 		req = buildRequest(Rollback, steps[step], req, nil)
 		logs.Log(logs.Info, fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
 
 		_, err = processRequest(uTID, req, steps[step])
 		if err != nil {
-			/*
-			 * Todo: alert, write in kafka, etc
-			 */
 			logs.Log(logs.Error, err.Error())
 			return
 		}
