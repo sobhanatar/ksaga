@@ -38,6 +38,17 @@ func init() {
 	log.SetOutput(io.MultiWriter(f))
 }
 
+//GetLogger Get an instance of logger
+func GetLogger() *logrus.Logger {
+	if log != nil {
+		fmt.Println("I'm singleton")
+		return log
+	}
+
+	fmt.Println("I'm created")
+	return logrus.New()
+}
+
 //Log log to stdout
 func Log(level int, m string) {
 	fm := "2006/01/02 - 15:04:05.000"
