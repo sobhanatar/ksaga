@@ -10,6 +10,7 @@ file can contain as many transactions as a system need.
 
 The fields of the configuration files as follows:
 
+- `log_level`: the level of debug application will log in file
 - `endpoints`: the array of transactions that can be handled by this plugin. Each endpoint has the following structure:
     - `endpoint`: the name of the endpoint. This parameter and its value also should be the same as `endpoint` name in
       the `extra_config` part of krakenD configuration file. If the plugin cannot find a match, an error is thrown.

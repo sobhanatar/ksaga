@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/controllers"
@@ -24,21 +25,26 @@ const (
 
 type registerer string
 
-var cfg config.SagaClientConfig
+var (
+	cfg  config.SagaClientConfig
+	cLog *logrus.Logger
+)
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClients interface
 var ClientRegisterer = registerer(PName)
 
 func init() {
+	lvl, _ := logrus.ParseLevel(cfg.LogLevel)
+	cLog = logs.GetInstance(lvl)
+
 	err := cfg.ParseClient(CfgAdr)
 	if err != nil {
-		logs.LogF(logs.Panic, messages.ClientPluginLoadError, map[string]interface{}{Msg: err.Error()})
-		logs.Log(logs.Panic, messages.ClientPluginLoadError)
-		fmt.Println(logs.Panic, err.Error())
+		cLog.WithFields(map[string]interface{}{Msg: err.Error()}).Panic(messages.ClientPluginLoadError)
+		logs.Logs(logrus.PanicLevel, fmt.Sprintf(messages.ClientPluginLoadError, err.Error()))
 		return
 	}
 
-	logs.Log(logs.Info, fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
+	logs.Logs(logrus.InfoLevel, fmt.Sprintf(messages.ClientPluginLoad, ClientRegisterer))
 }
 
 func (r registerer) RegisterClients(f func(
@@ -69,32 +75,34 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 
 		uTID = uuid.New().String()
 
+		cLog.Panic(logs.GenerateLog(map[string]interface{}{Msg: "my message", UTID: uTID, Extra: "my extra", "severity": logrus.ErrorLevel}))
+		fmt.Println("error created")
 		ex, ix := cfg.EndpointIndex(ec.Endpoint())
 		if !ex {
 			m := fmt.Sprintf(messages.ClientEndpointNotFoundError, ec.Endpoint())
-			logs.LogF(logs.Error, m, map[string]interface{}{UTID: uTID})
-			logs.Log(logs.Error, m)
+			cLog.WithFields(map[string]interface{}{UTID: uTID}).Error(m)
+			logs.Logs(logrus.ErrorLevel, m)
 			return
 		}
 
-		logs.Log(logs.Info, fmt.Sprintf(messages.ClientUniversalTransactionID, uTID))
+		logs.Logs(logrus.InfoLevel, fmt.Sprintf(messages.ClientUniversalTransactionID, uTID))
 
 		ep := cfg.Endpoints[ix]
 		fs, err = controllers.ProcessRequests(uTID, req, ep.Steps)
 		if err != nil {
 			err = controllers.ProcessRollbackRequests(uTID, req, ep.Steps, fs-1)
 			if err != nil {
-				logs.LogF(logs.Panic, ep.RollbackFailed, map[string]interface{}{UTID: uTID, Extra: ep.Steps[fs].Alias})
+				cLog.WithFields(map[string]interface{}{UTID: uTID, Extra: ep.Steps[fs].Alias}).Panic(ep.RollbackFailed)
 				generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.RollbackFailed})
 				return
 			}
 
-			logs.LogF(logs.Error, ep.Rollback, map[string]interface{}{UTID: uTID, Extra: ep.Steps[fs].Alias})
+			cLog.WithFields(map[string]interface{}{UTID: uTID, Extra: ep.Steps[fs].Alias}).Error(ep.Rollback)
 			generateResponse(&w, map[string]interface{}{Status: http.StatusUnprocessableEntity, Msg: ep.Rollback})
 			return
 		}
 
-		logs.LogF(logs.Info, ep.Register, map[string]interface{}{UTID: uTID, Extra: ep.Endpoint})
+		cLog.WithFields(map[string]interface{}{UTID: uTID, Extra: ep.Endpoint}).Info(ep.Register)
 		generateResponse(&w, map[string]interface{}{Status: http.StatusOK, Msg: ep.Register})
 	}), nil
 }
@@ -103,6 +111,6 @@ func generateResponse(w *http.ResponseWriter, m map[string]interface{}) {
 	(*w).Header().Add(HKey, HVal)
 	_, err := (*w).Write(messages.Generate(m))
 	if err != nil {
-		logs.Log(logs.Error, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
+		logs.Logs(logrus.ErrorLevel, fmt.Sprintf(messages.ClientResponseWriterError, err.Error()))
 	}
 }

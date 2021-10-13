@@ -17,7 +17,7 @@
             200
           ],
           "register": {
-            "url": "http://127.0.0.1:6102/api/krakend/payment/register",
+            "url": "http://127.0.0.1:8110/api/krakend/payment/register",
             "method": "POST",
             "header": {
               "Foo": "Bar"
@@ -25,7 +25,7 @@
             "body": true
           },
           "rollback": {
-            "url": "http://127.0.0.1:6102/api/krakend/payment/rollback",
+            "url": "http://127.0.0.1:8110/api/krakend/payment/rollback",
             "method": "POST",
             "header": {
               "Foo": "Bar"
@@ -43,7 +43,7 @@
             200
           ],
           "register": {
-            "url": "http://127.0.0.1:6102/api/krakend/invoice/register",
+            "url": "http://127.0.0.1:8110/api/krakend/invoice/register",
             "method": "POST",
             "header": {
               "Foo": "Bar"
@@ -51,7 +51,7 @@
             "body": true
           },
           "rollback": {
-            "url": "http://127.0.0.1:6102/api/krakend/invoice/rollback",
+            "url": "http://127.0.0.1:8110/api/krakend/invoice/rollback",
             "method": "POST",
             "header": {
               "Foo": "Bar"
@@ -69,7 +69,7 @@
             200
           ],
           "register": {
-            "url": "http://127.0.0.1:6102/api/krakend/library/register",
+            "url": "http://127.0.0.1:8110/api/krakend/library/register",
             "method": "POST",
             "header": {
               "Foo": "Bar"
@@ -77,7 +77,7 @@
             "body": true
           },
           "rollback": {
-            "url": "http://127.0.0.1:6102/api/krakend/library/rollback",
+            "url": "http://127.0.0.1:8110/api/krakend/library/rollback",
             "method": "POST",
             "header": {
               "Foo": "Bar"

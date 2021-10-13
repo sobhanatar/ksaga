@@ -13,7 +13,7 @@ const (
 	ClientEndpointNotFoundError    = "No matching endpoint found as %s in config file"
 	ClientConfigFIleUnmarshalError = "Error unmarshalling config file: %s"
 
-	ClientPluginLoadError          = "Config file has loaded with following errors. Resolve the errors and run again!"
+	ClientPluginLoadError          = "Config file has loaded with following errors. Resolve the errors and run again!\n%s"
 	ClientConfigRetryError         = "\t- Endpoint max retry can't be less than 0 (Endpoint: %d, Step: %d)"
 	ClientConfigTimeoutError       = "\t- Endpoint timeout can't be equal or less than 0 (Endpoint: %d, Step: %d)"
 	ClientConfigUrlEmptyError      = "\t- Endpoint url can't be empty (Endpoint: %d, Step: %d)"

@@ -27,5 +27,6 @@ type Endpoints struct {
 }
 
 type SagaClientConfig struct {
+	LogLevel  string `json:"log_level"`
 	Endpoints []Endpoints
 }

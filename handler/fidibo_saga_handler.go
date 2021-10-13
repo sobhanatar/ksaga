@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/logs"
 )
@@ -23,7 +24,7 @@ type Message struct {
 type registerer string
 
 func init() {
-	logs.Log(logs.Info, "Handler: fidiboSagaHandler plugin loaded!!!")
+	logs.Logs(logrus.InfoLevel, "Handler: fidiboSagaHandler plugin loaded!!!")
 }
 
 func (r registerer) RegisterHandlers(f func(

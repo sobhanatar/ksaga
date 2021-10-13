@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"newgit.fidibo.com/fidiborearc/krakend/plugins/saga/config"
@@ -27,15 +28,15 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) (int,
 	)
 
 	sc := len(steps)
-	logs.Log(logs.Info, fmt.Sprintf(messages.ClientBackendServices, sc))
+	logs.Logs(logrus.InfoLevel, fmt.Sprintf(messages.ClientBackendServices, sc))
 
 	for ix, step := range steps {
-		logs.Log(logs.Info, fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
+		logs.Logs(logrus.InfoLevel, fmt.Sprintf(messages.ClientServiceCall, step.Alias, req.URL.String()))
 		req = buildRequest(Register, steps[ix], req, resp)
 
 		resp, err = processRequest(uTID, req, step)
 		if err != nil {
-			logs.Log(logs.Error, err.Error())
+			logs.Logs(logrus.ErrorLevel, err.Error())
 			return ix, err
 		}
 
@@ -51,11 +52,11 @@ func ProcessRequests(uTID string, req *http.Request, steps []config.Steps) (int,
 func ProcessRollbackRequests(uTID string, req *http.Request, steps []config.Steps, fs int) (err error) {
 	for step := fs; step >= 0; step-- {
 		req = buildRequest(Rollback, steps[step], req, nil)
-		logs.Log(logs.Info, fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
+		logs.Logs(logrus.InfoLevel, fmt.Sprintf(messages.ClientRollbackError, steps[step].Alias, req.URL.String()))
 
 		_, err = processRequest(uTID, req, steps[step])
 		if err != nil {
-			logs.Log(logs.Error, err.Error())
+			logs.Logs(logrus.ErrorLevel, err.Error())
 			return
 		}
 	}
